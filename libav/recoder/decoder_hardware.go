@@ -6,52 +6,75 @@ import (
 
 	"github.com/asticode/go-astiav"
 	"github.com/facebookincubator/go-belt/tool/logger"
+	"github.com/xaionaro-go/recoder"
 )
 
-type decoderStreamHardware struct {
+type DecoderHardware struct {
 	codec                 *astiav.Codec
 	codecContext          *astiav.CodecContext
 	hardwareDeviceContext *astiav.HardwareDeviceContext
 	hardwarePixelFormat   astiav.PixelFormat
-	inputStream           *astiav.Stream
 }
 
-func (d *decoderStreamHardware) CodecContext() *astiav.CodecContext {
+func (d *DecoderHardware) Codec() *astiav.Codec {
+	return d.codec
+}
+
+func (d *DecoderHardware) CodecContext() *astiav.CodecContext {
 	return d.codecContext
 }
 
-func (d *decoderStreamHardware) InputStream() *astiav.Stream {
-	return d.inputStream
-}
-
-func (d *decoderStreamHardware) Close() error {
+func (d *DecoderHardware) Close() error {
 	d.codecContext.Free()
 	return nil
 }
 
-func (d *Decoder) newHardwareDecoder(
+func (d *InputDecoder) newHardwareDecoder(
 	ctx context.Context,
 	_ *Input,
 	stream *astiav.Stream,
-) (_ret *decoderStreamHardware, _err error) {
-	if stream.CodecParameters().MediaType() != astiav.MediaTypeVideo {
+) (_ret *decoderWithStream, _err error) {
+	decoder, err := NewDecoderHardware(
+		ctx,
+		stream.CodecParameters(),
+		d.HardwareDeviceType,
+		d.Config.HardwareDeviceTypeName,
+		d.Config.CodecName,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &decoderWithStream{
+		decoder: decoder,
+		Stream:  stream,
+	}, nil
+}
+
+func NewDecoderHardware(
+	ctx context.Context,
+	codecParameters *astiav.CodecParameters,
+	hardwareDeviceType astiav.HardwareDeviceType,
+	hardwareDeviceTypeName recoder.HardwareDeviceTypeName,
+	codecName recoder.CodecName,
+) (_ret *DecoderHardware, _err error) {
+	if codecParameters.MediaType() != astiav.MediaTypeVideo {
 		return nil, fmt.Errorf("currently hardware decoding is supported only for video streams")
 	}
 
-	decoder := &decoderStreamHardware{inputStream: stream}
+	decoder := &DecoderHardware{}
 	defer func() {
 		if _err != nil {
 			_ = decoder.Close()
 		}
 	}()
 
-	if d.Config.CodecName != "" {
-		decoder.codec = astiav.FindDecoderByName(string(d.Config.CodecName))
+	if codecName != "" {
+		decoder.codec = astiav.FindDecoderByName(string(codecName))
 	} else {
-		decoder.codec = astiav.FindDecoder(stream.CodecParameters().CodecID())
+		decoder.codec = astiav.FindDecoder(codecParameters.CodecID())
 	}
 	if decoder.codec == nil {
-		return nil, fmt.Errorf("unable to find a codec using codec ID %v", stream.CodecParameters().CodecID())
+		return nil, fmt.Errorf("unable to find a codec using codec ID %v", codecParameters.CodecID())
 	}
 
 	if decoder.codecContext = astiav.AllocCodecContext(decoder.codec); decoder.codecContext == nil {
@@ -59,24 +82,24 @@ func (d *Decoder) newHardwareDecoder(
 	}
 
 	for _, p := range decoder.codec.HardwareConfigs() {
-		if p.MethodFlags().Has(astiav.CodecHardwareConfigMethodFlagHwDeviceCtx) && p.HardwareDeviceType() == d.HardwareDeviceType {
+		if p.MethodFlags().Has(astiav.CodecHardwareConfigMethodFlagHwDeviceCtx) && p.HardwareDeviceType() == hardwareDeviceType {
 			decoder.hardwarePixelFormat = p.PixelFormat()
 			break
 		}
 	}
 
 	if decoder.hardwarePixelFormat == astiav.PixelFormatNone {
-		return nil, fmt.Errorf("hardware device type '%v' is not supported", d.HardwareDeviceType)
+		return nil, fmt.Errorf("hardware device type '%v' is not supported", hardwareDeviceType)
 	}
 
-	if err := stream.CodecParameters().ToCodecContext(decoder.codecContext); err != nil {
+	if err := codecParameters.ToCodecContext(decoder.codecContext); err != nil {
 		return nil, fmt.Errorf("CodecParameters().ToCodecContext(...) returned error: %w", err)
 	}
 
 	var err error
 	decoder.hardwareDeviceContext, err = astiav.CreateHardwareDeviceContext(
-		d.HardwareDeviceType,
-		string(d.Config.HardwareDeviceTypeName),
+		hardwareDeviceType,
+		string(hardwareDeviceTypeName),
 		nil,
 		0,
 	)

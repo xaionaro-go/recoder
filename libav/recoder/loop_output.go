@@ -67,8 +67,6 @@ func (out *loopOutput) writerLoopForOutput(
 	return nil
 }
 
-var firstTime = false
-
 func (out *loopOutput) writePacket(
 	ctx context.Context,
 	outputItem *EncoderOutput,
