@@ -117,9 +117,9 @@ type encoder struct {
 
 func (r *Recoder) NewEncoder(
 	ctx context.Context,
-	cfg recoder.EncoderConfig,
+	cfg recoder.EncodersConfig,
 ) (recoder.Encoder, error) {
-	if !reflect.DeepEqual(cfg, recoder.EncoderConfig{}) {
+	if !reflect.DeepEqual(cfg, recoder.EncodersConfig{}) {
 		return nil, fmt.Errorf("non-empty configs are not supported by this implementation of a recoder")
 	}
 

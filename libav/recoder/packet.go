@@ -10,6 +10,16 @@ var PacketPool = newPool(
 	func(p *astiav.Packet) { p.Free() },
 )
 
+func CopyPacketReferenced(dst, src *astiav.Packet) {
+	dst.Ref(src)
+}
+
+func ClonePacketAsReferenced(src *astiav.Packet) *astiav.Packet {
+	dst := PacketPool.Get()
+	CopyPacketReferenced(dst, src)
+	return dst
+}
+
 func CopyPacketWritable(dst, src *astiav.Packet) {
 	dst.Ref(src)
 	err := dst.MakeWritable()

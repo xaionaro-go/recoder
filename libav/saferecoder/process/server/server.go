@@ -34,7 +34,7 @@ type GRPCServer struct {
 	RecoderNextID atomic.Uint64
 
 	EncoderLocker xsync.Mutex
-	Encoder       map[EncoderID]recoder.Encoder
+	Encoder       map[EncoderID]recoder.Recoder
 	EncoderNextID atomic.Uint64
 
 	InputLocker xsync.Mutex
@@ -231,7 +231,7 @@ func (srv *GRPCServer) NewEncoder(
 	req *recoder_grpc.NewEncoderRequest,
 ) (*recoder_grpc.NewEncoderReply, error) {
 	ctx = srv.ctx(ctx)
-	encoderInstance := recoder.NewEncoderCopy()
+	encoderInstance := recoder.NewRecoderCopy()
 	encoderID := xsync.DoR1(ctx, &srv.EncoderLocker, func() EncoderID {
 		encoderID := EncoderID(srv.EncoderNextID.Add(1))
 		srv.Encoder[encoderID] = encoderInstance

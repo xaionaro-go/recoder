@@ -15,7 +15,7 @@ type Recoder struct {
 
 func (r *Recoder) NewEncoder(
 	ctx context.Context,
-	cfg recoder.EncoderConfig,
+	cfg recoder.EncodersConfig,
 ) (recoder.Encoder, error) {
 	return r.Process.NewEncoder(ctx, cfg)
 }

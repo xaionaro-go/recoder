@@ -205,7 +205,7 @@ func (c *Client) CloseRecoder(
 }
 
 type EncoderID uint64
-type EncoderConfig = recoder.EncoderConfig
+type EncoderConfig = recoder.EncodersConfig
 
 func (c *Client) NewEncoder(
 	ctx context.Context,

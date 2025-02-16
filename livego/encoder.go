@@ -17,7 +17,7 @@ type Encoder struct {
 var _ recoder.Encoder = (*Encoder)(nil)
 
 func NewEncoder(
-	cfg recoder.EncoderConfig,
+	cfg recoder.EncodersConfig,
 ) (*Encoder, error) {
 	return &Encoder{}, nil
 }

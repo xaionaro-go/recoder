@@ -1,6 +1,7 @@
 package recoder
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/asticode/go-astiav"
@@ -10,8 +11,9 @@ type Frame struct {
 	*astiav.Frame
 	InputStream        *astiav.Stream
 	InputFormatContext *astiav.FormatContext
-	DecoderContext     *astiav.CodecContext
+	Decoder            *Decoder
 	Packet             *astiav.Packet
+	RAMFrame           *astiav.Frame
 }
 
 func (f *Frame) MaxPosition() time.Duration {
@@ -28,6 +30,25 @@ func (f *Frame) PositionInBytes() int64 {
 
 func (f *Frame) FrameDuration() time.Duration {
 	return toDuration(f.Packet.Duration(), f.InputStream.TimeBase().Float64())
+}
+
+func (f *Frame) TransferFromHardwareToRAM() error {
+	if f.Decoder.HardwareDeviceContext() == nil {
+		return fmt.Errorf("is not a hardware-backed frame")
+	}
+
+	if f.Frame.PixelFormat() != f.Decoder.HardwarePixelFormat() {
+		return fmt.Errorf("unexpected pixel format: %v != %v", f.Frame.PixelFormat(), f.Decoder.HardwarePixelFormat())
+	}
+
+	if err := f.Frame.TransferHardwareData(f.RAMFrame); err != nil {
+		return fmt.Errorf("failed to transfer frame from hardware decoder to RAM: %w", err)
+	}
+
+	f.RAMFrame.SetPts(f.Frame.Pts())
+	f.Frame.Unref()
+	f.Frame = f.RAMFrame
+	return nil
 }
 
 func toDuration(ts int64, timeBase float64) time.Duration {

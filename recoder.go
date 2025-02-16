@@ -12,7 +12,7 @@ type Publisher interface {
 type Recoder interface {
 	io.Closer
 
-	NewEncoder(context.Context, EncoderConfig) (Encoder, error)
+	NewEncoder(context.Context, EncodersConfig) (Encoder, error)
 	NewInputFromURL(context.Context, string, string, InputConfig) (Input, error)
 	NewOutputFromURL(context.Context, string, string, OutputConfig) (Output, error)
 	StartRecoding(context.Context, Encoder, Input, Output) error

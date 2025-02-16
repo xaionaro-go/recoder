@@ -2,27 +2,34 @@ package recoder
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"sync/atomic"
 
 	"github.com/asticode/go-astiav"
 	"github.com/asticode/go-astikit"
+	"github.com/facebookincubator/go-belt/tool/experimental/errmon"
 	"github.com/facebookincubator/go-belt/tool/logger"
+	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder"
 )
 
 type InputConfig struct {
 	GenericConfig recoder.InputConfig
 
-	CustomOptions []CustomOption
+	CustomOptions DictionaryItems
 }
 
 type Input struct {
-	ID InputID
+	ID         InputID
+	OutputChan chan OutputPacket
 	*astikit.Closer
 	*astiav.FormatContext
 	*astiav.Dictionary
 }
+
+var _ ProcessingNode = (*Input)(nil)
 
 var nextInputID atomic.Uint64
 
@@ -37,8 +44,9 @@ func NewInputFromURL(
 	}
 
 	input := &Input{
-		ID:     InputID(nextInputID.Add(1)),
-		Closer: astikit.NewCloser(),
+		ID:         InputID(nextInputID.Add(1)),
+		Closer:     astikit.NewCloser(),
+		OutputChan: make(chan OutputPacket, 1),
 	}
 
 	input.FormatContext = astiav.AllocFormatContext()
@@ -69,5 +77,91 @@ func NewInputFromURL(
 	if err := input.FormatContext.FindStreamInfo(nil); err != nil {
 		return nil, fmt.Errorf("unable to get stream info: %w", err)
 	}
+
+	observability.Go(ctx, func() {
+		defer input.Close()
+		err := input.readLoop(ctx)
+		if err != nil && !errors.Is(err, io.EOF) {
+			errmon.ObserveErrorCtx(ctx, err)
+		}
+	})
 	return input, nil
+}
+
+func (i *Input) readLoop(
+	ctx context.Context,
+) (_err error) {
+	logger.Debugf(ctx, "readLoop")
+	defer func() { logger.Debugf(ctx, "/readLoop: %v", _err) }()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		packet := PacketPool.Get()
+		err := i.readIntoPacket(ctx, packet)
+		switch err {
+		case nil:
+			logger.Tracef(
+				ctx,
+				"received a frame (pos:%d, pts:%d, dts:%d, dur:%d), data: 0x %X",
+				packet.Pos(), packet.Pts(), packet.Dts(), packet.Duration(),
+				packet.Data(),
+			)
+			i.OutputChan <- OutputPacket{
+				Packet: packet,
+			}
+		case io.EOF:
+			packet.Free()
+			return nil
+		default:
+			packet.Free()
+			return fmt.Errorf("unable to read a packet: %w", err)
+		}
+
+	}
+}
+
+func (i *Input) readIntoPacket(
+	_ context.Context,
+	packet *astiav.Packet,
+) error {
+	err := i.FormatContext.ReadFrame(packet)
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, astiav.ErrEof):
+		return io.EOF
+	default:
+		return fmt.Errorf("unable to read a frame: %w", err)
+	}
+}
+
+var noInputPacketsChan chan InputPacket
+
+func (i *Input) SendPacketChan() chan<- InputPacket {
+	return noInputPacketsChan
+}
+
+func (i *Input) SendPacket(
+	ctx context.Context,
+	input InputPacket,
+) (_haveDecoded bool, _haveEncoded bool, _err error) {
+	return false, false, fmt.Errorf("cannot send packets to an Input")
+}
+
+func (i *Input) OutputPacketsChan() <-chan OutputPacket {
+	return i.OutputChan
+}
+
+func (i *Input) GetStream(streamIndex int) *astiav.Stream {
+	for _, stream := range i.FormatContext.Streams() {
+		if stream.Index() == streamIndex {
+			return stream
+		}
+	}
+	return nil
 }

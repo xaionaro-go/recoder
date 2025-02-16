@@ -59,22 +59,19 @@ func main() {
 	}
 
 	l.Debugf("opening '%s' as the output...", toURL)
-	output, err := recoder.NewOutputFromURL(ctx, toURL, "", recoder.OutputConfig{})
+	output, err := recoder.NewOutputFromURL(
+		ctx,
+		toURL, "",
+		recoder.NewStreamConfigurerCopy(input),
+		recoder.OutputConfig{},
+	)
 	if err != nil {
 		l.Fatal(err)
 	}
 
-	loop := recoder.NewLoop()
-
-	if err := loop.AddInput(ctx, input); err != nil {
-		l.Fatal(err)
-	}
-	if err := loop.AddOutput(ctx, output); err != nil {
-		l.Fatal(err)
-	}
-
-	l.Debugf("starting the recoding...")
-	err = loop.StartAndWait(ctx, recoder.NewEncoderCopy())
+	pipeline := recoder.NewPipelineNode(input)
+	pipeline.PushTo = append(pipeline.PushTo, recoder.NewPipelineNode(output))
+	err = pipeline.Serve(ctx)
 	if err != nil {
 		l.Fatal(err)
 	}

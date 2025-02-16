@@ -79,9 +79,8 @@ message EncoderConfig {
 }
 
 message OutputAudioTrack {
-    uint64 inputID = 1;
-    repeated uint64 inputTrackIDs = 2;
-    EncodeAudioConfig encode = 3;
+    repeated uint64 inputTrackIDs = 1;
+    EncodeAudioConfig encode = 2;
 }
 
 message EncodeAudioConfig {
@@ -103,9 +102,8 @@ message AudioQuality {
 }
 
 message OutputVideoTrack {
-    uint64 inputID = 1;
-    repeated uint64 inputTrackIDs = 2;
-    EncodeVideoConfig encode = 3;
+    repeated uint64 inputTrackIDs = 1;
+    EncodeVideoConfig encode = 2;
 }
 
 message EncodeVideoConfig {

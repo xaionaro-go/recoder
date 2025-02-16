@@ -35,7 +35,7 @@ type OutputID uint64
 type OutputConfig = recoder.OutputConfig
 
 type EncoderID uint64
-type EncoderConfig = recoder.EncoderConfig
+type EncoderConfig = recoder.EncodersConfig
 
 func (c *Client) NewInputFromURL(
 	ctx context.Context,

@@ -21,7 +21,7 @@ func (r *Recoder) Close() error {
 
 func (r *Recoder) NewEncoder(
 	ctx context.Context,
-	cfg recoder.EncoderConfig,
+	cfg recoder.EncodersConfig,
 ) (recoder.Encoder, error) {
 	return NewEncoder(cfg)
 }

@@ -3,30 +3,44 @@ package recoder
 import (
 	"encoding/json"
 	"fmt"
-	"image"
 	"strings"
 
 	"github.com/goccy/go-yaml"
 )
 
-type EncoderConfig struct {
-	OutputAudioTracks []AudioTrackConfig
-	OutputVideoTracks []VideoTrackConfig
+type DecodersConfig struct {
+	InputAudioTracks []AudioTrackDecodingConfig
+	InputVideoTracks []VideoTrackDecodingConfig
 }
 
-type VideoTrackConfig struct {
-	InputID       uint
+type EncodersConfig struct {
+	OutputAudioTracks []AudioTrackEncodingConfig
+	OutputVideoTracks []VideoTrackEncodingConfig
+}
+
+type VideoTrackDecodingConfig struct {
+	DecodeVideoConfig
+}
+
+type DecodeVideoConfig struct {
+	Codec         VideoCodec    `json:"codec,omitempty"   yaml:"codec,omitempty"`
+	CustomOptions CustomOptions `json:"custom_options,omitempty" yaml:"custom_options,omitempty"`
+}
+
+func (cfg DecodeVideoConfig) GetCustomOptions() CustomOptions {
+	return cfg.CustomOptions
+}
+
+type VideoTrackEncodingConfig struct {
 	InputTrackIDs []int
 	EncodeVideoConfig
 }
 
 type EncodeVideoConfig struct {
-	FlipV   bool             `json:"flip_v,omitempty"  yaml:"flip_v,omitempty"`
-	FlipH   bool             `json:"flip_h,omitempty"  yaml:"flip_h,omitempty"`
-	Crop    *image.Rectangle `json:"crop,omitempty"    yaml:"crop,omitempty"`
-	Scale   *image.Point     `json:"scale,omitempty"   yaml:"scale,omitempty"`
-	Codec   VideoCodec       `json:"codec,omitempty"   yaml:"codec,omitempty"`
-	Quality VideoQuality     `json:"quality,omitempty" yaml:"quality,omitempty"`
+	Codec         VideoCodec    `json:"codec,omitempty"   yaml:"codec,omitempty"`
+	Quality       VideoQuality  `json:"quality,omitempty" yaml:"quality,omitempty"`
+	CustomOptions CustomOptions `json:"custom_options,omitempty" yaml:"custom_options,omitempty"`
+	// TODO: add video filters
 }
 
 func (c *EncodeVideoConfig) UnmarshalJSON(b []byte) (_err error) {
@@ -59,15 +73,29 @@ func (c *EncodeVideoConfig) UnmarshalYAML(b []byte) (_err error) {
 	return nil
 }
 
-type AudioTrackConfig struct {
-	InputID       uint
+type AudioTrackDecodingConfig struct {
+	DecodeAudioConfig
+}
+
+type DecodeAudioConfig struct {
+	Codec         AudioCodec    `json:"codec,omitempty"   yaml:"codec,omitempty"`
+	CustomOptions CustomOptions `json:"custom_options,omitempty" yaml:"custom_options,omitempty"`
+}
+
+func (cfg DecodeAudioConfig) GetCustomOptions() CustomOptions {
+	return cfg.CustomOptions
+}
+
+type AudioTrackEncodingConfig struct {
 	InputTrackIDs []int
 	EncodeAudioConfig
 }
 
 type EncodeAudioConfig struct {
-	Codec   AudioCodec   `json:"codec,omitempty"   yaml:"codec,omitempty"`
-	Quality AudioQuality `json:"quality,omitempty" yaml:"quality,omitempty"`
+	Codec         AudioCodec    `json:"codec,omitempty"   yaml:"codec,omitempty"`
+	Quality       AudioQuality  `json:"quality,omitempty" yaml:"quality,omitempty"`
+	CustomOptions CustomOptions `json:"custom_options,omitempty" yaml:"custom_options,omitempty"`
+	// TODO: add audio filters
 }
 
 func (c *EncodeAudioConfig) UnmarshalJSON(b []byte) (_err error) {
