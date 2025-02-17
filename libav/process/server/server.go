@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"io"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -30,7 +31,14 @@ type Context struct {
 }
 
 func (context *Context) Close() error {
-	context.CloseOnce.Do(func() { close(context.RecordingEndChan) })
+	ok := false
+	context.CloseOnce.Do(func() {
+		close(context.RecordingEndChan)
+		ok = true
+	})
+	if !ok {
+		return io.ErrClosedPipe
+	}
 	return nil
 }
 
@@ -76,6 +84,7 @@ func (srv *GRPCServer) Serve(
 	}
 	srv.IsStarted = true
 	srv.Belt = belt.CtxBelt(ctx)
+	logger.Debugf(srv.ctx(context.Background()), "srv.GRPCServer.Serve")
 	return srv.GRPCServer.Serve(listener)
 }
 
@@ -87,7 +96,9 @@ func (srv *GRPCServer) belt() *belt.Belt {
 }
 
 func (srv *GRPCServer) ctx(ctx context.Context) context.Context {
-	return belt.CtxWithBelt(ctx, srv.belt())
+	ctx = belt.CtxWithBelt(ctx, srv.belt())
+	ctx = xsync.WithNoLogging(ctx, true)
+	return ctx
 }
 
 func (srv *GRPCServer) SetLoggingLevel(
@@ -107,7 +118,8 @@ func (srv *GRPCServer) NewInput(
 	ctx context.Context,
 	req *recoder_grpc.NewInputRequest,
 ) (*recoder_grpc.NewInputReply, error) {
-	ctx = srv.ctx(ctx)
+	//ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "NewInput")
 	switch path := req.Path.GetResourcePath().(type) {
 	case *recoder_grpc.ResourcePath_Url:
 		return srv.newInputByURL(ctx, path, req.Config)
@@ -185,7 +197,8 @@ func (srv *GRPCServer) NewOutput(
 	ctx context.Context,
 	req *recoder_grpc.NewOutputRequest,
 ) (*recoder_grpc.NewOutputReply, error) {
-	ctx = srv.ctx(ctx)
+	//ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "NewOutput")
 	switch path := req.Path.GetResourcePath().(type) {
 	case *recoder_grpc.ResourcePath_Url:
 		return srv.newOutputByURL(ctx, path, req.Config)
@@ -276,7 +289,8 @@ func (srv *GRPCServer) NewContext(
 	ctx context.Context,
 	req *recoder_grpc.NewContextRequest,
 ) (*recoder_grpc.NewContextReply, error) {
-	ctx = srv.ctx(ctx)
+	//ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "NewContext")
 	contextInstance := &Context{
 		RecordingEndChan: make(chan struct{}),
 	}
@@ -294,7 +308,8 @@ func (srv *GRPCServer) StartRecoding(
 	ctx context.Context,
 	req *recoder_grpc.StartRecodingRequest,
 ) (*recoder_grpc.StartRecodingReply, error) {
-	ctx = srv.ctx(ctx)
+	//ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "StartRecoding")
 
 	contextID := ContextID(req.GetContextID())
 	inputID := InputID(req.GetInputID())
@@ -307,8 +322,8 @@ func (srv *GRPCServer) StartRecoding(
 	defer srv.InputLocker.ManualUnlock(ctx)
 	defer srv.OutputLocker.ManualUnlock(ctx)
 
-	context := srv.Context[contextID]
-	if context == nil {
+	srvContext := srv.Context[contextID]
+	if srvContext == nil {
 		return nil, fmt.Errorf("the recorder with ID '%v' does not exist", contextID)
 	}
 	input := srv.Input[inputID]
@@ -322,16 +337,32 @@ func (srv *GRPCServer) StartRecoding(
 
 	pipeline := avpipeline.NewPipelineNode(input)
 	pipeline.PushTo = append(pipeline.PushTo, avpipeline.NewPipelineNode(output))
-	context.Pipeline = pipeline
+	srvContext.Pipeline = pipeline
 
 	observability.Go(ctx, func() {
+		defer logger.Debugf(ctx, "recoding ended")
 		defer func() {
-			context.Close()
+			srvContext.Close()
 		}()
-		err := pipeline.Serve(xcontext.DetachDone(ctx))
-		if err != nil {
-			logger.Errorf(ctx, "unable to serve the pipeline: %v", err)
-		}
+		pipelineCtx, cancelFn := context.WithCancel(xcontext.DetachDone(ctx))
+		defer cancelFn()
+		errCh := make(chan avpipeline.ErrPipeline, 1)
+
+		observability.Go(ctx, func() {
+			defer logger.Debugf(ctx, "/errCh listener")
+			for {
+				select {
+				case <-pipelineCtx.Done():
+					return
+				case err := <-errCh:
+					logger.Errorf(ctx, "received error: %v", err)
+					cancelFn()
+					return
+				}
+			}
+		})
+		logger.Debugf(ctx, "pipeline.Serve")
+		pipeline.Serve(pipelineCtx, errCh)
 	})
 
 	return &recoder_grpc.StartRecodingReply{}, nil

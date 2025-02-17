@@ -11,11 +11,14 @@ import (
 	"os"
 
 	"github.com/facebookincubator/go-belt"
+	"github.com/facebookincubator/go-belt/tool/logger"
+	"github.com/facebookincubator/go-belt/tool/logger/implementation/logrus"
 	"github.com/xaionaro-go/recoder/libav/process/server"
 )
 
 const (
 	EnvKeyIsEncoder = "IS_STREAMPANEL_RECODER"
+	EnvKeyLogLevel  = "LOG_LEVEL"
 )
 
 func init() {
@@ -43,7 +46,20 @@ func runEncoder() {
 
 	fmt.Fprintf(os.Stdout, "%s\n", b)
 
+	var loggerLevel logger.Level
+	loggerLevel.Set(os.Getenv(EnvKeyLogLevel))
+	l := logrus.Default().WithLevel(loggerLevel)
+	ctx := logger.CtxWithLogger(context.Background(), l)
+	ctx, cancelFn := context.WithCancel(ctx)
+	defer cancelFn()
+	logger.Default = func() logger.Logger {
+		return l
+	}
+	defer belt.Flush(ctx)
+
+	logger.Debugf(ctx, "logging level: %s", loggerLevel)
+
 	srv := server.NewServer()
-	err = srv.Serve(context.TODO(), listener)
+	err = srv.Serve(ctx, listener)
 	panic(err)
 }

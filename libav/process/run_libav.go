@@ -48,7 +48,7 @@ func Run(
 	if err != nil {
 		return nil, fmt.Errorf("unable to initialize an stdout pipe: %w", err)
 	}
-	cmd.Env = append(os.Environ(), EnvKeyIsEncoder+"=1")
+	cmd.Env = append(os.Environ(), EnvKeyIsEncoder+"=1", EnvKeyLogLevel+"="+logger.FromCtx(ctx).Level().String())
 	err = child_process_manager.ConfigureCommand(cmd)
 	errmon.ObserveErrorCtx(ctx, err)
 	err = cmd.Start()

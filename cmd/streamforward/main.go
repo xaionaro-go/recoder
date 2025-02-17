@@ -85,6 +85,14 @@ func main() {
 		l.Fatal(err)
 	}
 
+	observability.Go(ctx, func() {
+		err := recoder.Wait(ctx)
+		if err != nil {
+			logger.Error(ctx, "unable to wait: %v", err)
+		}
+		cancelFn()
+	})
+
 	l.Debugf("started recoding...")
 	t := time.NewTicker(time.Second)
 	defer t.Stop()

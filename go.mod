@@ -12,7 +12,7 @@ require (
 	github.com/gwuhaolin/livego v0.0.0-20241106020610-16c6af5d9031
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/pkg/errors v0.9.1
-	github.com/xaionaro-go/avpipeline v0.0.0-20250217003315-5dec7f1cb60e
+	github.com/xaionaro-go/avpipeline v0.0.0-20250217031756-936d572a90d3
 	github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42
 	github.com/xaionaro-go/observability v0.0.0-20250111142240-5d72f17a6d12
 	github.com/xaionaro-go/xcontext v0.0.0-20250111150717-e70e1f5b299c
