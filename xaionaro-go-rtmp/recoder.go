@@ -32,17 +32,16 @@ type Recoder struct {
 }
 
 var _ recoder.Recoder = (*Recoder)(nil)
-var _ recoder.NewInputFromPublisherer = (*Recoder)(nil)
 
-func (RecoderFactory) New(
+func NewRecoder(
 	ctx context.Context,
-) (recoder.Recoder, error) {
+) *Recoder {
 	return &Recoder{
 		eventChan: make(chan *flvtag.FlvTag),
-	}, nil
+	}
 }
 
-func (r *Recoder) StartRecoding(
+func (r *Recoder) Start(
 	ctx context.Context,
 	_ recoder.Encoder,
 	inputIface recoder.Input,
@@ -126,7 +125,7 @@ func (r *Recoder) NewEncoder(
 	return encoder{}, nil
 }
 
-func (r *Recoder) WaitForRecodingEnd(
+func (r *Recoder) Wait(
 	ctx context.Context,
 ) error {
 	var closeChan <-chan struct{}

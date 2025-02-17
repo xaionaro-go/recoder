@@ -23,12 +23,12 @@ type Output struct {
 
 var _ recoder.Output = (*Output)(nil)
 
-func (r *Recoder) NewOutputFromURL(
+func NewOutputFromURL(
 	ctx context.Context,
 	urlString string,
 	streamKey string,
 	cfg recoder.OutputConfig,
-) (_ recoder.Output, _err error) {
+) (_ *Output, _err error) {
 	var output *Output
 	defer func() {
 		if r := recover(); r != nil {

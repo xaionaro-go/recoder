@@ -4,110 +4,62 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/xaionaro-go/avpipeline/types"
 	"github.com/xaionaro-go/recoder"
-	"github.com/xaionaro-go/recoder/libav/saferecoder"
+	"github.com/xaionaro-go/recoder/libav/process"
 )
 
+type Packet = types.Packet
+
+type ContextID = process.ContextID
+
 type Recoder struct {
-	*saferecoder.Recoder
-	Process *saferecoder.Process
+	Context *Context
 }
 
-func (r *Recoder) NewEncoder(
-	ctx context.Context,
-	cfg recoder.EncodersConfig,
-) (recoder.Encoder, error) {
-	return r.Process.NewEncoder(ctx, cfg)
-}
-
-func (r *Recoder) StartEncoding(
-	ctx context.Context,
-	encoderIface recoder.Encoder,
-	inputIface recoder.Input,
-	outputIface recoder.Output,
-) error {
-	encoder, ok := encoderIface.(*saferecoder.Encoder)
-	if !ok {
-		return fmt.Errorf("expected 'encoder' of type %T, but received %T", encoder, encoder)
-	}
-	input, ok := inputIface.(*saferecoder.Input)
-	if !ok {
-		return fmt.Errorf("expected 'input' of type %T, but received %T", input, inputIface)
-	}
-	output, ok := outputIface.(*saferecoder.Output)
-	if !ok {
-		return fmt.Errorf("expected 'output' of type %T, but received %T", output, outputIface)
-	}
-	return r.Recoder.StartRecoding(ctx, encoder, input, output)
-}
-
-func (r *Recoder) NewInputFromURL(
-	ctx context.Context,
-	url string,
-	authKey string,
-	cfg recoder.InputConfig,
-) (recoder.Input, error) {
-	return r.Process.NewInputFromURL(ctx, url, authKey, cfg)
-}
-
-func (r *Recoder) NewOutputFromURL(
-	ctx context.Context,
-	url string,
-	streamKey string,
-	cfg recoder.OutputConfig,
-) (recoder.Output, error) {
-	return r.Process.NewOutputFromURL(ctx, url, streamKey, cfg)
-}
-
-func (r *Recoder) WaitForRecodingEnd(ctx context.Context) error {
-	return r.Recoder.Wait(ctx)
-}
+var _ recoder.Recoder = (*Recoder)(nil)
 
 func (r *Recoder) Close() error {
-	err := r.Process.Kill()
-	r.Process = nil
-	r.Recoder = nil
-	return err
+	return nil
 }
 
-func (r *Recoder) Recode(
+func (r *Recoder) Start(
 	ctx context.Context,
-	encoderIface recoder.Encoder,
-	inputIface recoder.Input,
-	outputIface recoder.Output,
+	_ recoder.Encoder,
+	input recoder.Input,
+	output recoder.Output,
 ) error {
-	encoder, ok := encoderIface.(*saferecoder.Encoder)
-	if !ok {
-		return fmt.Errorf("expected 'encoder' of type %T, but received %T", encoder, encoder)
+	err := r.Context.Process.processBackend.Client.StartRecoding(
+		ctx,
+		r.Context.ID,
+		input.(*Input).ID,
+		output.(*Output).ID,
+	)
+	if err != nil {
+		return fmt.Errorf("got an error while starting the recording: %w", err)
 	}
-	input, ok := inputIface.(*saferecoder.Input)
-	if !ok {
-		return fmt.Errorf("expected 'input' of type %T, but received %T", input, inputIface)
-	}
-	output, ok := outputIface.(*saferecoder.Output)
-	if !ok {
-		return fmt.Errorf("expected 'output' of type %T, but received %T", output, outputIface)
-	}
-	return r.Recoder.Recode(ctx, encoder, input, output)
+
+	return nil
 }
 
-func (r *Recoder) StartRecoding(
+func (r *Recoder) Wait(ctx context.Context) error {
+	ch, err := r.Context.Process.Client.RecodingEndedChan(ctx, r.Context.ID)
+	if err != nil {
+		return err
+	}
+	<-ch
+	return nil
+}
+
+func (r *Recoder) GetStats(
 	ctx context.Context,
-	encoderIface recoder.Encoder,
-	inputIface recoder.Input,
-	outputIface recoder.Output,
-) error {
-	encoder, ok := encoderIface.(*saferecoder.Encoder)
-	if !ok {
-		return fmt.Errorf("expected 'encoder' of type %T, but received %T", encoder, encoder)
+) (*recoder.Stats, error) {
+	read, wrote, err := r.Context.Process.GetStats(ctx, r.Context.ID)
+	if err != nil {
+		return nil, err
 	}
-	input, ok := inputIface.(*saferecoder.Input)
-	if !ok {
-		return fmt.Errorf("expected 'input' of type %T, but received %T", input, inputIface)
-	}
-	output, ok := outputIface.(*saferecoder.Output)
-	if !ok {
-		return fmt.Errorf("expected 'output' of type %T, but received %T", output, outputIface)
-	}
-	return r.Recoder.StartRecoding(ctx, encoder, input, output)
+	return &recoder.Stats{
+		BytesCountRead:  read,
+		BytesCountWrote: wrote,
+	}, nil
 }

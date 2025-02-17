@@ -11,12 +11,12 @@ type Output struct {
 	URL string
 }
 
-func (r *Recoder) NewOutputFromURL(
+func NewOutputFromURL(
 	ctx context.Context,
 	url string,
 	authKey string,
 	cfg recoder.OutputConfig,
-) (recoder.Output, error) {
+) (*Output, error) {
 	if authKey != "" {
 		return nil, fmt.Errorf("not implemented")
 	}

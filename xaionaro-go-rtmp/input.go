@@ -22,7 +22,7 @@ type Input struct {
 
 var _ recoder.Input = (*Input)(nil)
 
-func (r *Recoder) NewInputFromPublisher(
+func NewInputFromPublisher(
 	ctx context.Context,
 	publisherIface recoder.Publisher,
 	cfg recoder.InputConfig,
@@ -41,12 +41,12 @@ func (r *Recoder) NewInputFromPublisher(
 	}, nil
 }
 
-func (r *Recoder) NewInputFromURL(
+func NewInputFromURL(
 	ctx context.Context,
 	urlString string,
 	authKey string,
 	cfg recoder.InputConfig,
-) (_ recoder.Input, _err error) {
+) (_ *Input, _err error) {
 	inClient, err := newRTMPClient(ctx, urlString)
 	if err != nil {
 		return nil, fmt.Errorf("unable to connect to the input endpoint '%s': %w", urlString, err)

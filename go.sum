@@ -10,8 +10,8 @@ github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAE
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=
 github.com/armon/consul-api v0.0.0-20180202201655-eb2c6b5be1b6/go.mod h1:grANhF5doyWs3UAsr3K4I6qtAmlQcZDesFNEHPZAzj8=
-github.com/asticode/go-astikit v0.51.1 h1:vNY3Ct9mUeR/MQnL8U9MJvBjAuwpFTljTolCPQlvlv8=
-github.com/asticode/go-astikit v0.51.1/go.mod h1:h4ly7idim1tNhaVkdVBeXQZEE3L0xblP7fCWbgwipF0=
+github.com/asticode/go-astikit v0.52.0 h1:kTl2XjgiVQhUl1H7kim7NhmTtCMwVBbPrXKqhQhbk8Y=
+github.com/asticode/go-astikit v0.52.0/go.mod h1:fV43j20UZYfXzP9oBn33udkvCvDvCDhzjVqoLFuuYZE=
 github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b/go.mod h1:LWMyo4iOLWXHGdBki7NIht1kHru/0wM179h+d3g8ATM=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
@@ -29,8 +29,8 @@ github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dgrijalva/jwt-go v3.2.0+incompatible/go.mod h1:E3ru+11k8xSBh+hMPgOLZmtrrCbhqsmaPHjLKYnJCaQ=
 github.com/dgryski/go-sip13 v0.0.0-20181026042036-e10d5fee7954/go.mod h1:vAd38F8PWV+bWy6jNmig1y/TA+kYO4g3RSRF0IAv0no=
-github.com/facebookincubator/go-belt v0.0.0-20240804203001-846c4409d41c h1:OLoKEdiDjc+r1xT1WVD+Tt1k+uGVZtSHXF+t3mo05Jg=
-github.com/facebookincubator/go-belt v0.0.0-20240804203001-846c4409d41c/go.mod h1:BLkOQHXT14GLgKvM22LB/fDcq1stjijrTOJQEk3xrUA=
+github.com/facebookincubator/go-belt v0.0.0-20250201205440-80b5034808e3 h1:2c1ufw9nj0O3HUwE6KxfI3MMGO2HiO3ZVfcqJ/O9gjw=
+github.com/facebookincubator/go-belt v0.0.0-20250201205440-80b5034808e3/go.mod h1:ATrLnViIvvcC4AbrF7g/s2MXJPfl6+MEQNCXwKOIB+M=
 github.com/fatih/color v1.15.0 h1:kOqh6YHBtK8aywxGerMG2Eq3H6Qgoqeo13Bk2Mv/nBs=
 github.com/fatih/color v1.15.0/go.mod h1:0h5ZqXfHYED7Bhv2ZJamyIOUej9KtShiJESRwBDUSsw=
 github.com/fortytw2/leaktest v1.2.0 h1:cj6GCiwJDH7l3tMHLjZDo0QqPtrXJiWSI9JgpeQKw+Q=
@@ -197,8 +197,8 @@ github.com/spf13/cast v1.7.0/go.mod h1:ancEpBxwJDODSW/UG4rDrAqiKolqNNh2DX3mk86cA
 github.com/spf13/jwalterweatherman v1.0.0 h1:XHEdyB+EcvlqZamSM4ZOMGlc93t6AcsBEu9Gc1vn7yk=
 github.com/spf13/jwalterweatherman v1.0.0/go.mod h1:cQK4TGJAtQXfYWX+Ddv3mKDzgVb68N+wFjFa4jdeBTo=
 github.com/spf13/pflag v1.0.3/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
-github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
-github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
+github.com/spf13/pflag v1.0.6 h1:jFzHGLGAlb3ruxLB8MhbI6A8+AQX/2eW4qeyNZXNp2o=
+github.com/spf13/pflag v1.0.6/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/spf13/viper v1.6.3 h1:pDDu1OyEDTKzpJwdq4TiuLyMsUgRa/BT5cn5O62NoHs=
 github.com/spf13/viper v1.6.3/go.mod h1:jUMtyi0/lB5yZH/FjyGAoH7IMNrIhlBf6pXZmbMDvzw=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
@@ -221,6 +221,10 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1
 github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=
 github.com/xaionaro-go/astiav v0.0.0-20250106205037-a1605f324663 h1:b0lOm2erjkc/D1/BBa1m9F/jV5AEhU6sRzkcqwTUZH8=
 github.com/xaionaro-go/astiav v0.0.0-20250106205037-a1605f324663/go.mod h1:K7D8UC6GeQt85FUxk2KVwYxHnotrxuEnp5evkkudc2s=
+github.com/xaionaro-go/avpipeline v0.0.0-20250216225020-d0223d32db3a h1:z3Rp6R7g87VxfXG3ke3ij5hob8XeKwfUlrM2CVo17/g=
+github.com/xaionaro-go/avpipeline v0.0.0-20250216225020-d0223d32db3a/go.mod h1:lS9JO5wARvinE8inpa7pLZHuIq+XydkRVeK4eWzUa5I=
+github.com/xaionaro-go/avpipeline v0.0.0-20250217003315-5dec7f1cb60e h1:ylRZrLjZdZAPTlpbuTsaiVxcTXRKQZN9oiHk+sGMxAM=
+github.com/xaionaro-go/avpipeline v0.0.0-20250217003315-5dec7f1cb60e/go.mod h1:lS9JO5wARvinE8inpa7pLZHuIq+XydkRVeK4eWzUa5I=
 github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42 h1:izCjREd+62HDF9FRYqUI7dgJNdUxAIysEuqed8lBcDY=
 github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42/go.mod h1:IuQWd+hy/tLuvuqFX0N9SMZrzOprM8Jvvdu+42RJwk4=
 github.com/xaionaro-go/gorex v0.0.0-20241010205749-bcd59d639c4d h1:9DyH0lboWWzKUwiqGmp9sTZ3bSPhgJHiiWgV+hqY9Uo=
@@ -248,8 +252,8 @@ github.com/xaionaro-go/xlogrus v0.0.0-20250111150201-60557109545a h1:EoNRdOtBMnZ
 github.com/xaionaro-go/xlogrus v0.0.0-20250111150201-60557109545a/go.mod h1:RPfWNuwqJykkA2TEvisXqHgy1ypA/1H2HBdIRSeVJ9o=
 github.com/xaionaro-go/xpath v0.0.0-20250111145115-55f5728f643f h1:ofxY1akRlVdJ/AEDj0EakK4Aez8fzeWTTe2mCAZiJ0A=
 github.com/xaionaro-go/xpath v0.0.0-20250111145115-55f5728f643f/go.mod h1:f0DVcqddOy1RALOgXJHwpQnkp1u1yeBX/+A2+Bf4EGc=
-github.com/xaionaro-go/xsync v0.0.0-20250111141039-3e7f31b1a2c6 h1:ROtz45GepYXGa3EK3bImlfdvZKdAr5LEBgZAW7dKRsg=
-github.com/xaionaro-go/xsync v0.0.0-20250111141039-3e7f31b1a2c6/go.mod h1:FCpywNAl4a4hgzE8j7Z+TpdhBQi5WHxnI35jOrFpoQw=
+github.com/xaionaro-go/xsync v0.0.0-20250113213958-aedf9c8786f5 h1:l18KTPxJCTppjRNVRtE5PcKCqFBSzVPcwAw2x0vxAdo=
+github.com/xaionaro-go/xsync v0.0.0-20250113213958-aedf9c8786f5/go.mod h1:FCpywNAl4a4hgzE8j7Z+TpdhBQi5WHxnI35jOrFpoQw=
 github.com/xiang90/probing v0.0.0-20190116061207-43a291ad63a2/go.mod h1:UETIi67q53MR2AWcXfiuqkDkRtnGDLqkBTpCHuJHxtU=
 github.com/xordataexchange/crypt v0.0.3-0.20170626215501-b2862e3d0a77/go.mod h1:aYKd//L2LvnjZzWKhF00oedf4jCCReLcmhLdhm1A27Q=
 github.com/yutopp/go-amf0 v0.1.0 h1:a3UeBZG7nRF0zfvmPn2iAfNo1RGzUpHz1VyJD2oGrik=

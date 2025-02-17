@@ -1,4 +1,4 @@
-package livego
+package xaionarogortmp
 
 import (
 	"github.com/xaionaro-go/recoder"

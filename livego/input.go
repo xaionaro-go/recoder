@@ -13,12 +13,12 @@ type Input struct {
 
 var _ recoder.Input = (*Input)(nil)
 
-func (r *Recoder) NewInputFromURL(
+func NewInputFromURL(
 	ctx context.Context,
 	url string,
 	authKey string,
 	cfg recoder.InputConfig,
-) (recoder.Input, error) {
+) (*Input, error) {
 	if authKey != "" {
 		return nil, fmt.Errorf("not implemented")
 	}
