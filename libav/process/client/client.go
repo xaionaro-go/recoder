@@ -207,6 +207,7 @@ func (c *Client) StartRecoding(
 	contextID ContextID,
 	inputID InputID,
 	outputID OutputID,
+	splitTracks bool,
 ) error {
 	client, conn, err := c.grpcClient()
 	if err != nil {
@@ -215,9 +216,10 @@ func (c *Client) StartRecoding(
 	defer conn.Close()
 
 	_, err = client.StartRecoding(ctx, &recoder_grpc.StartRecodingRequest{
-		ContextID: uint64(contextID),
-		InputID:   uint64(inputID),
-		OutputID:  uint64(outputID),
+		ContextID:   uint64(contextID),
+		InputID:     uint64(inputID),
+		OutputID:    uint64(outputID),
+		SplitTracks: splitTracks,
 	})
 	if err != nil {
 		return fmt.Errorf("query error: %w", err)

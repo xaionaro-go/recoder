@@ -12,8 +12,11 @@ import (
 	"github.com/facebookincubator/go-belt"
 	"github.com/facebookincubator/go-belt/tool/logger"
 	"github.com/xaionaro-go/avpipeline"
+	"github.com/xaionaro-go/avpipeline/kernel"
+	"github.com/xaionaro-go/avpipeline/processor"
 	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder/libav/grpc/go/recoder_grpc"
+	"github.com/xaionaro-go/secret"
 	"github.com/xaionaro-go/xcontext"
 	"github.com/xaionaro-go/xsync"
 	"google.golang.org/grpc"
@@ -25,7 +28,7 @@ type InputID uint64
 type OutputID uint64
 
 type Context struct {
-	*avpipeline.Pipeline
+	InputNode        *avpipeline.Node[*processor.FromKernel[*kernel.Input]]
 	CloseOnce        sync.Once
 	RecordingEndChan chan struct{}
 }
@@ -56,11 +59,11 @@ type GRPCServer struct {
 	ContextNextID atomic.Uint64
 
 	InputLocker xsync.Mutex
-	Input       map[InputID]*avpipeline.Input
+	Input       map[InputID]*kernel.Input
 	InputNextID atomic.Uint64
 
 	OutputLocker xsync.Mutex
-	Output       map[OutputID]*avpipeline.Output
+	Output       map[OutputID]*kernel.Output
 	OutputNextID atomic.Uint64
 }
 
@@ -68,8 +71,8 @@ func NewServer() *GRPCServer {
 	srv := &GRPCServer{
 		GRPCServer: grpc.NewServer(),
 		Context:    make(map[ContextID]*Context),
-		Input:      make(map[InputID]*avpipeline.Input),
-		Output:     make(map[OutputID]*avpipeline.Output),
+		Input:      make(map[InputID]*kernel.Input),
+		Output:     make(map[OutputID]*kernel.Output),
 	}
 	recoder_grpc.RegisterRecoderServer(srv.GRPCServer, srv)
 	return srv
@@ -133,8 +136,13 @@ func (srv *GRPCServer) newInputByURL(
 	path *recoder_grpc.ResourcePath_Url,
 	_ *recoder_grpc.InputConfig,
 ) (*recoder_grpc.NewInputReply, error) {
-	config := avpipeline.InputConfig{}
-	input, err := avpipeline.NewInputFromURL(xcontext.DetachDone(ctx), path.Url.Url, path.Url.AuthKey, config)
+	config := kernel.InputConfig{}
+	input, err := kernel.NewInputFromURL(
+		xcontext.DetachDone(ctx),
+		path.Url.Url,
+		secret.New(path.Url.AuthKey),
+		config,
+	)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"unable to initialize an input using URL '%s' and config %#+v",
@@ -161,9 +169,12 @@ func (srv *GRPCServer) CloseContext(
 	err := xsync.DoR1(ctx, &srv.ContextLocker, func() error {
 		context := srv.Context[contextID]
 		if context == nil {
-			return fmt.Errorf("there is no open input with ID %d", contextID)
+			return fmt.Errorf("there is no open context with ID %d", contextID)
 		}
-		context.Close()
+		err := context.Close()
+		if err != nil {
+			logger.Errorf(ctx, "unable to close the context: %v", err)
+		}
 		delete(srv.Context, contextID)
 		return nil
 	})
@@ -183,7 +194,10 @@ func (srv *GRPCServer) CloseInput(
 		if input == nil {
 			return fmt.Errorf("there is no open input with ID %d", inputID)
 		}
-		input.Close()
+		err := input.Close(ctx)
+		if err != nil {
+			logger.Errorf(ctx, "unable to close the input: %v", err)
+		}
 		delete(srv.Input, inputID)
 		return nil
 	})
@@ -217,7 +231,7 @@ func (srv *GRPCServer) GetStream(
 			return nil
 		}
 
-		var input *avpipeline.Input
+		var input *kernel.Input
 		for _, _input := range srv.Input {
 			input = _input
 			break
@@ -239,11 +253,11 @@ func (srv *GRPCServer) newOutputByURL(
 	path *recoder_grpc.ResourcePath_Url,
 	_ *recoder_grpc.OutputConfig,
 ) (*recoder_grpc.NewOutputReply, error) {
-	config := avpipeline.OutputConfig{}
-	output, err := avpipeline.NewOutputFromURL(
+	config := kernel.OutputConfig{}
+	output, err := kernel.NewOutputFromURL(
 		xcontext.DetachDone(ctx),
 		path.Url.Url,
-		path.Url.AuthKey,
+		secret.New(path.Url.AuthKey),
 		config,
 	)
 	if err != nil {
@@ -275,7 +289,10 @@ func (srv *GRPCServer) CloseOutput(
 		if output == nil {
 			return fmt.Errorf("there is no open output with ID %d", outputID)
 		}
-		output.Close()
+		err := output.Close(ctx)
+		if err != nil {
+			logger.Errorf(ctx, "unable to close the output: %v", err)
+		}
 		delete(srv.Output, outputID)
 		return nil
 	})
@@ -335,9 +352,23 @@ func (srv *GRPCServer) StartRecoding(
 		return nil, fmt.Errorf("the output with ID '%v' does not exist", outputID)
 	}
 
-	pipeline := avpipeline.NewPipelineNode(input)
-	pipeline.PushTo = append(pipeline.PushTo, avpipeline.NewPipelineNode(output))
-	srvContext.Pipeline = pipeline
+	inputNode := avpipeline.NewNodeFromKernel(
+		ctx,
+		input,
+		processor.DefaultOptionsInput()...,
+	)
+	srvContext.InputNode = inputNode
+
+	outputNode := avpipeline.NewNodeFromKernel(
+		ctx,
+		output,
+		processor.DefaultOptionsOutput()...,
+	)
+	inputNode.PushTo.Add(outputNode)
+
+	if req.SplitTracks {
+		// TODO: do something!
+	}
 
 	observability.Go(ctx, func() {
 		defer logger.Debugf(ctx, "recoding ended")
@@ -346,7 +377,7 @@ func (srv *GRPCServer) StartRecoding(
 		}()
 		pipelineCtx, cancelFn := context.WithCancel(xcontext.DetachDone(ctx))
 		defer cancelFn()
-		errCh := make(chan avpipeline.ErrPipeline, 1)
+		errCh := make(chan avpipeline.ErrNode, 1)
 
 		observability.Go(ctx, func() {
 			defer logger.Debugf(ctx, "/errCh listener")
@@ -362,7 +393,7 @@ func (srv *GRPCServer) StartRecoding(
 			}
 		})
 		logger.Debugf(ctx, "pipeline.Serve")
-		pipeline.Serve(pipelineCtx, errCh)
+		avpipeline.ServeRecursively(pipelineCtx, inputNode, avpipeline.ServeConfig{}, errCh)
 	})
 
 	return &recoder_grpc.StartRecodingReply{}, nil
@@ -397,8 +428,8 @@ func (srv *GRPCServer) GetStats(
 ) (*recoder_grpc.GetRecoderStatsReply, error) {
 	return xsync.DoR2(ctx, &srv.ContextLocker, func() (*recoder_grpc.GetRecoderStatsReply, error) {
 		context := srv.Context[ContextID(req.GetContextID())]
-		readStats := context.Pipeline.GetStats()
-		writeStats := context.Pipeline.PushTo[0].GetStats()
+		readStats := context.InputNode.GetStatistics().GetStats()
+		writeStats := context.InputNode.PushTo[0].Node.GetStatistics().GetStats()
 		return &recoder_grpc.GetRecoderStatsReply{
 			BytesCountRead:  readStats.BytesCountWrote,
 			BytesCountWrote: writeStats.BytesCountRead,

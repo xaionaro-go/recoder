@@ -9,7 +9,7 @@ import (
 	"github.com/xaionaro-go/recoder/libav/process"
 )
 
-type Packet = types.Packet
+type Packet = types.PacketCommons
 
 type ContextID = process.ContextID
 

@@ -162,6 +162,7 @@ message StartRecodingRequest {
     uint64 contextID = 1;
     uint64 inputID = 2;
     uint64 outputID = 3;
+    bool splitTracks = 4;
 }
 message StartRecodingReply {}
 
