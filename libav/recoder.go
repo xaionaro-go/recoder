@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/xaionaro-go/avpipeline/types"
+	"github.com/xaionaro-go/avpipeline/packet"
 	"github.com/xaionaro-go/recoder"
 	"github.com/xaionaro-go/recoder/libav/process"
 )
 
-type Packet = types.PacketCommons
+type Packet = packet.Commons
 
 type ContextID = process.ContextID
 

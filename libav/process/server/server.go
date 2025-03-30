@@ -364,7 +364,7 @@ func (srv *GRPCServer) StartRecoding(
 		output,
 		processor.DefaultOptionsOutput()...,
 	)
-	inputNode.PushTo.Add(outputNode)
+	inputNode.PushPacketsTo.Add(outputNode)
 
 	if req.SplitTracks {
 		// TODO: do something!
@@ -429,7 +429,7 @@ func (srv *GRPCServer) GetStats(
 	return xsync.DoR2(ctx, &srv.ContextLocker, func() (*recoder_grpc.GetRecoderStatsReply, error) {
 		context := srv.Context[ContextID(req.GetContextID())]
 		readStats := context.InputNode.GetStatistics().GetStats()
-		writeStats := context.InputNode.PushTo[0].Node.GetStatistics().GetStats()
+		writeStats := context.InputNode.PushPacketsTo[0].Node.GetStatistics().GetStats()
 		return &recoder_grpc.GetRecoderStatsReply{
 			BytesCountRead:  readStats.BytesCountWrote,
 			BytesCountWrote: writeStats.BytesCountRead,

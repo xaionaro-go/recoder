@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.6
-	github.com/xaionaro-go/avpipeline v0.0.0-20250323233158-a7d0d6f5abcc
+	github.com/xaionaro-go/avpipeline v0.0.0-20250330124107-99d9ba9f0ed1
 	github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42
 	github.com/xaionaro-go/observability v0.0.0-20250309200059-047fad8d76e4
 	github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2
@@ -33,10 +33,11 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
+	github.com/go-ng/container v0.0.0-20220615121757-4740bf4bbc52 // indirect
 	github.com/go-ng/slices v0.0.0-20230703171042-6195d35636a2 // indirect
 	github.com/go-ng/sort v0.0.0-20220617173827-2cc7cd04f7c7 // indirect
 	github.com/go-ng/xatomic v0.0.0-20230519181013-85c0ec87e55f // indirect
-	github.com/go-ng/xsort v0.0.0-20220617174223-1d146907bccc // indirect
+	github.com/go-ng/xsort v0.0.0-20250330112557-d2ee7f01661c // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/go-redis/redis/v7 v7.2.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -74,7 +75,7 @@ require (
 	github.com/xaionaro-go/unsafetools v0.0.0-20241024014258-a46e1ce3763e // indirect
 	github.com/yutopp/go-amf0 v0.1.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
+	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/net v0.37.0 // indirect
 	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
