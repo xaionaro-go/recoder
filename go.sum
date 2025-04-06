@@ -221,12 +221,12 @@ github.com/subosito/gotenv v1.2.0 h1:Slr1R9HxAlEKefgq5jn9U+DnETlIUa6HfgEzj0g5d7s
 github.com/subosito/gotenv v1.2.0/go.mod h1:N0PQaV/YGNqwC0u51sEeR/aUtSLEXKX9iv69rRypqCw=
 github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/urfave/negroni v1.0.0/go.mod h1:Meg73S6kFm/4PpbYdq35yYWoCZ9mS/YSx+lKnmiohz4=
-github.com/xaionaro-go/astiav v0.0.0-20250323164157-9924a3697350 h1:OJ1RQPbZ9yUvGneM9tzrvIJnNC5T/ljcjTdMkjN2Iqo=
-github.com/xaionaro-go/astiav v0.0.0-20250323164157-9924a3697350/go.mod h1:K7D8UC6GeQt85FUxk2KVwYxHnotrxuEnp5evkkudc2s=
+github.com/xaionaro-go/astiav v0.0.0-20250401003159-fe890da0a1a9 h1:mASXMZuFyOwMLE8CAbAatiCdTTfoL57vCR1LwYRY6sk=
+github.com/xaionaro-go/astiav v0.0.0-20250401003159-fe890da0a1a9/go.mod h1:K7D8UC6GeQt85FUxk2KVwYxHnotrxuEnp5evkkudc2s=
 github.com/xaionaro-go/avmediacodec v0.0.0-20250317164140-f4ce53d9a1cc h1:w3w0JxQUDWSdrGYdd7SjQ+UukQq5dfE1H9Cq7JgEbD4=
 github.com/xaionaro-go/avmediacodec v0.0.0-20250317164140-f4ce53d9a1cc/go.mod h1:IZ3ZQcDrwrIKV4jmSdUW3PZH9ALcxNKhzmrcIt4jNUY=
-github.com/xaionaro-go/avpipeline v0.0.0-20250330124107-99d9ba9f0ed1 h1:BCpS+hN0jZ5xbtHZxB/RyUWiPuNDN1YkhPbVYjHNK/M=
-github.com/xaionaro-go/avpipeline v0.0.0-20250330124107-99d9ba9f0ed1/go.mod h1:hfwQfSw5fbt4o8B2zU9ETA4DqSTpnNEuVGxyZ/fy9Yk=
+github.com/xaionaro-go/avpipeline v0.0.0-20250331013640-965f27ebf9c5 h1:1orBehPNlvbaIErU6zaobxr56bG9nW9PEpS6j3nITMU=
+github.com/xaionaro-go/avpipeline v0.0.0-20250331013640-965f27ebf9c5/go.mod h1:hfwQfSw5fbt4o8B2zU9ETA4DqSTpnNEuVGxyZ/fy9Yk=
 github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42 h1:izCjREd+62HDF9FRYqUI7dgJNdUxAIysEuqed8lBcDY=
 github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42/go.mod h1:IuQWd+hy/tLuvuqFX0N9SMZrzOprM8Jvvdu+42RJwk4=
 github.com/xaionaro-go/gorex v0.0.0-20241010205749-bcd59d639c4d h1:9DyH0lboWWzKUwiqGmp9sTZ3bSPhgJHiiWgV+hqY9Uo=

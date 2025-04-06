@@ -34,6 +34,7 @@ func (r *Recoder) Start(
 		r.Context.ID,
 		input.(*Input).ID,
 		output.(*Output).ID,
+		false,
 	)
 	if err != nil {
 		return fmt.Errorf("got an error while starting the recording: %w", err)

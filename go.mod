@@ -2,7 +2,7 @@ module github.com/xaionaro-go/recoder
 
 go 1.24.1
 
-replace github.com/asticode/go-astiav v0.35.1 => github.com/xaionaro-go/astiav v0.0.0-20250323164157-9924a3697350
+replace github.com/asticode/go-astiav v0.35.1 => github.com/xaionaro-go/astiav v0.0.0-20250401003159-fe890da0a1a9
 
 require (
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.6
-	github.com/xaionaro-go/avpipeline v0.0.0-20250330124107-99d9ba9f0ed1
+	github.com/xaionaro-go/avpipeline v0.0.0-20250331013640-965f27ebf9c5
 	github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42
 	github.com/xaionaro-go/observability v0.0.0-20250309200059-047fad8d76e4
 	github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2
