@@ -10,6 +10,7 @@ import (
 	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder"
 	"github.com/xaionaro-go/recoder/libav/grpc/go/recoder_grpc"
+	"github.com/xaionaro-go/recoder/libav/grpc/goconv"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -207,7 +208,7 @@ func (c *Client) StartRecoding(
 	contextID ContextID,
 	inputID InputID,
 	outputID OutputID,
-	splitTracks bool,
+	config *recoder.EncodersConfig,
 ) error {
 	client, conn, err := c.grpcClient()
 	if err != nil {
@@ -216,10 +217,10 @@ func (c *Client) StartRecoding(
 	defer conn.Close()
 
 	_, err = client.StartRecoding(ctx, &recoder_grpc.StartRecodingRequest{
-		ContextID:   uint64(contextID),
-		InputID:     uint64(inputID),
-		OutputID:    uint64(outputID),
-		SplitTracks: splitTracks,
+		ContextID: uint64(contextID),
+		InputID:   uint64(inputID),
+		OutputID:  uint64(outputID),
+		Config:    goconv.EncoderConfigToThrift(config != nil, safeUnref(config)),
 	})
 	if err != nil {
 		return fmt.Errorf("query error: %w", err)

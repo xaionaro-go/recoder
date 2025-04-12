@@ -47,7 +47,9 @@ func (f *Factory) NewRecoder(
 	}, nil
 }
 
-type Encoder struct{}
+type Encoder struct {
+	Config recoder.EncodersConfig
+}
 
 func (Encoder) Close() error {
 	return nil
@@ -57,7 +59,9 @@ func (f *Factory) NewEncoder(
 	ctx context.Context,
 	cfg recoder.EncodersConfig,
 ) (recoder.Encoder, error) {
-	return &Encoder{}, nil
+	return &Encoder{
+		Config: cfg,
+	}, nil
 }
 
 func (f *Factory) NewInputFromURL(

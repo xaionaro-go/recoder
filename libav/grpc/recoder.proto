@@ -71,8 +71,9 @@ message NewOutputReply {
 }
 
 message EncoderConfig {
-    repeated OutputAudioTrack outputAudioTracks = 1;
-	repeated OutputVideoTrack outputVideoTracks = 2;
+    bool enable = 1;
+    repeated OutputAudioTrack outputAudioTracks = 2;
+	repeated OutputVideoTrack outputVideoTracks = 3;
 }
 
 message OutputAudioTrack {
@@ -162,7 +163,7 @@ message StartRecodingRequest {
     uint64 contextID = 1;
     uint64 inputID = 2;
     uint64 outputID = 3;
-    bool splitTracks = 4;
+    EncoderConfig config = 4;
 }
 message StartRecodingReply {}
 

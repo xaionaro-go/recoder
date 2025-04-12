@@ -57,7 +57,7 @@ func (c *Client) StartRecoding(
 	contextID ContextID,
 	inputID InputID,
 	outputID OutputID,
-	splitTracks bool,
+	config recoder.EncodersConfig,
 ) error {
 	return fmt.Errorf("not compiled with libav support")
 }

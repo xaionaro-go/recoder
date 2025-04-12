@@ -25,7 +25,7 @@ func (r *Recoder) Close() error {
 
 func (r *Recoder) Start(
 	ctx context.Context,
-	_ recoder.Encoder,
+	encoder recoder.Encoder,
 	input recoder.Input,
 	output recoder.Output,
 ) error {
@@ -34,7 +34,7 @@ func (r *Recoder) Start(
 		r.Context.ID,
 		input.(*Input).ID,
 		output.(*Output).ID,
-		false,
+		encoder.(*Encoder).Config,
 	)
 	if err != nil {
 		return fmt.Errorf("got an error while starting the recording: %w", err)

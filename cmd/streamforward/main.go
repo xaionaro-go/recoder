@@ -15,6 +15,7 @@ import (
 	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder"
 	"github.com/xaionaro-go/recoder/libav"
+	"github.com/xaionaro-go/xsync"
 )
 
 func main() {
@@ -38,6 +39,7 @@ func main() {
 		return l
 	}
 	defer belt.Flush(ctx)
+	ctx = xsync.WithNoLogging(ctx, true)
 
 	if *netPprofAddr != "" {
 		observability.Go(ctx, func() { l.Error(http.ListenAndServe(*netPprofAddr, nil)) })

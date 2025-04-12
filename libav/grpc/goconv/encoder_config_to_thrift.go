@@ -8,23 +8,14 @@ import (
 )
 
 func EncoderConfigToThrift(
+	enable bool,
 	cfg recoder.EncodersConfig,
 ) *recoder_grpc.EncoderConfig {
 	return &recoder_grpc.EncoderConfig{
+		Enable:            enable,
 		OutputAudioTracks: OutputAudioTracksToThrift(cfg.OutputAudioTracks),
 		OutputVideoTracks: OutputVideoTracksToThrift(cfg.OutputVideoTracks),
 	}
-}
-
-func convertSlice[IN, OUT any](
-	tracks []IN,
-	convFunc func(IN) OUT,
-) []OUT {
-	result := make([]OUT, 0, len(tracks))
-	for _, item := range tracks {
-		result = append(result, convFunc(item))
-	}
-	return result
 }
 
 func OutputAudioTracksToThrift(
@@ -38,7 +29,7 @@ func OutputAudioTrackToThrift(
 ) *recoder_grpc.OutputAudioTrack {
 	return &recoder_grpc.OutputAudioTrack{
 		InputTrackIDs: convertSlice(cfg.InputTrackIDs, func(in int) uint64 { return uint64(in) }),
-		Encode:        EncodeAudioConfigToThrift(cfg.EncodeAudioConfig),
+		Encode:        EncodeAudioConfigToThrift(cfg.Config),
 	}
 }
 
@@ -92,7 +83,7 @@ func OutputVideoTrackToThrift(
 ) *recoder_grpc.OutputVideoTrack {
 	return &recoder_grpc.OutputVideoTrack{
 		InputTrackIDs: convertSlice(cfg.InputTrackIDs, func(in int) uint64 { return uint64(in) }),
-		Encode:        EncodeVideoConfigToThrift(cfg.EncodeVideoConfig),
+		Encode:        EncodeVideoConfigToThrift(cfg.Config),
 	}
 }
 

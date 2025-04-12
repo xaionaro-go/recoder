@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"slices"
 	"sync"
 	"sync/atomic"
 
@@ -12,10 +13,12 @@ import (
 	"github.com/facebookincubator/go-belt"
 	"github.com/facebookincubator/go-belt/tool/logger"
 	"github.com/xaionaro-go/avpipeline"
+	"github.com/xaionaro-go/avpipeline/codec"
 	"github.com/xaionaro-go/avpipeline/kernel"
 	"github.com/xaionaro-go/avpipeline/processor"
 	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder/libav/grpc/go/recoder_grpc"
+	"github.com/xaionaro-go/recoder/libav/grpc/goconv"
 	"github.com/xaionaro-go/secret"
 	"github.com/xaionaro-go/xcontext"
 	"github.com/xaionaro-go/xsync"
@@ -352,22 +355,83 @@ func (srv *GRPCServer) StartRecoding(
 		return nil, fmt.Errorf("the output with ID '%v' does not exist", outputID)
 	}
 
+	pipelineCtx, cancelFn := context.WithCancel(xcontext.DetachDone(ctx))
+
 	inputNode := avpipeline.NewNodeFromKernel(
-		ctx,
+		pipelineCtx,
 		input,
 		processor.DefaultOptionsInput()...,
 	)
 	srvContext.InputNode = inputNode
 
 	outputNode := avpipeline.NewNodeFromKernel(
-		ctx,
+		pipelineCtx,
 		output,
 		processor.DefaultOptionsOutput()...,
 	)
-	inputNode.PushPacketsTo.Add(outputNode)
 
-	if req.SplitTracks {
-		// TODO: do something!
+	hasRecoder := false
+	if encoderCfg := req.GetConfig(); encoderCfg != nil {
+		encoderCfg, isEnabled := goconv.EncoderConfigFromThrift(encoderCfg)
+		if isEnabled {
+			if len(encoderCfg.OutputVideoTracks) != 1 {
+				return nil, fmt.Errorf("we currently support recoding to a single video track only, but requested %d video tracks", len(encoderCfg.OutputVideoTracks))
+			}
+			videoTrack := encoderCfg.OutputVideoTracks[0]
+			if !slices.Equal(videoTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
+				return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
+			}
+			if len(encoderCfg.OutputAudioTracks) != 1 {
+				return nil, fmt.Errorf("we currently support recoding to a single audio track only, but requested %d audio tracks", len(encoderCfg.OutputAudioTracks))
+			}
+			audioTrack := encoderCfg.OutputAudioTracks[0]
+			if !slices.Equal(audioTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
+				return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
+			}
+			hasRecoder = true
+			decoderNode := avpipeline.NewNodeFromKernel(
+				pipelineCtx,
+				kernel.NewDecoder(
+					pipelineCtx,
+					codec.NewNaiveDecoderFactory(
+						pipelineCtx,
+						0, "",
+						nil, nil,
+					),
+				),
+				processor.DefaultOptionsRecoder()...,
+			)
+			inputNode.PushPacketsTo.Add(decoderNode)
+			encoderNode := avpipeline.NewNodeFromKernel(
+				pipelineCtx,
+				kernel.NewEncoder(
+					pipelineCtx,
+					codec.NewNaiveEncoderFactory(
+						pipelineCtx,
+						videoTrack.Config.Codec.String(),
+						audioTrack.Config.Codec.String(),
+						0, "",
+						nil, nil,
+					),
+					nil,
+				),
+				processor.DefaultOptionsRecoder()...,
+			)
+			mergerNode := avpipeline.NewNodeFromKernel(
+				pipelineCtx,
+				kernel.NewMapStreamIndices(
+					pipelineCtx,
+					frameStreamsMerger{},
+				),
+				processor.DefaultOptionsRecoder()...,
+			)
+			decoderNode.PushPacketsTo.Add(mergerNode)
+			mergerNode.PushPacketsTo.Add(encoderNode)
+			encoderNode.PushPacketsTo.Add(outputNode)
+		}
+	}
+	if !hasRecoder {
+		inputNode.PushPacketsTo.Add(outputNode)
 	}
 
 	observability.Go(ctx, func() {
@@ -375,7 +439,6 @@ func (srv *GRPCServer) StartRecoding(
 		defer func() {
 			srvContext.Close()
 		}()
-		pipelineCtx, cancelFn := context.WithCancel(xcontext.DetachDone(ctx))
 		defer cancelFn()
 		errCh := make(chan avpipeline.ErrNode, 1)
 
@@ -393,7 +456,7 @@ func (srv *GRPCServer) StartRecoding(
 			}
 		})
 		logger.Debugf(ctx, "pipeline.Serve")
-		avpipeline.ServeRecursively(pipelineCtx, inputNode, avpipeline.ServeConfig{}, errCh)
+		avpipeline.ServeRecursively(pipelineCtx, avpipeline.ServeConfig{}, errCh, inputNode)
 	})
 
 	return &recoder_grpc.StartRecodingReply{}, nil

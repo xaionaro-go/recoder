@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/goccy/go-yaml"
+	"maps"
+
+	"gopkg.in/yaml.v3"
 )
 
 type DecodersConfig struct {
@@ -14,8 +16,8 @@ type DecodersConfig struct {
 }
 
 type EncodersConfig struct {
-	OutputAudioTracks []AudioTrackEncodingConfig
-	OutputVideoTracks []VideoTrackEncodingConfig
+	OutputAudioTracks []AudioTrackEncodingConfig `json:"output_audio_tracks,omitempty" yaml:"output_audio_tracks,omitempty"`
+	OutputVideoTracks []VideoTrackEncodingConfig `json:"output_video_tracks,omitempty" yaml:"output_video_tracks,omitempty"`
 }
 
 type VideoTrackDecodingConfig struct {
@@ -32,8 +34,8 @@ func (cfg DecodeVideoConfig) GetCustomOptions() CustomOptions {
 }
 
 type VideoTrackEncodingConfig struct {
-	InputTrackIDs []int
-	EncodeVideoConfig
+	InputTrackIDs []int             `json:"input_track_ids,omitempty" yaml:"input_track_ids,omitempty"`
+	Config        EncodeVideoConfig `json:"config,omitempty" yaml:"config,omitempty"`
 }
 
 type EncodeVideoConfig struct {
@@ -59,18 +61,45 @@ func (c *EncodeVideoConfig) UnmarshalJSON(b []byte) (_err error) {
 }
 
 func (c *EncodeVideoConfig) UnmarshalYAML(b []byte) (_err error) {
-	c.Quality = videoQualitySerializable{}
-	err := yaml.Unmarshal(b, c)
+	m := map[string]any{}
+	err := yaml.Unmarshal(b, m)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal EncodeVideoConfig bytes to a map: %w", err)
+	}
+	quality := m["quality"]
+	m["quality"] = nil
+	b, err = yaml.Marshal(m)
+	if err != nil {
+		return fmt.Errorf("unable to remarshal back to EncodeVideoConfig from the map: %w", err)
+	}
+	err = yaml.Unmarshal(b, c)
 	if err != nil {
 		return fmt.Errorf("unable to un-JSON-ize: %w", err)
 	}
-	if c.Quality != nil {
-		c.Quality, err = c.Quality.(videoQualitySerializable).Convert()
+	if quality != nil {
+		sb, err := yaml.Marshal(quality)
+		if err != nil {
+			return fmt.Errorf("unable to remarshal back to EncodeVideoConfig from the map: %w", err)
+		}
+		s := videoQualitySerializable{}
+		err = yaml.Unmarshal(sb, &s)
+		if err != nil {
+			return fmt.Errorf("unable to un-JSON-ize: %w", err)
+		}
+		c.Quality, err = s.Convert()
 		if err != nil {
 			return fmt.Errorf("unable to convert the 'quality' field: %w", err)
 		}
 	}
 	return nil
+}
+
+func (c *EncodeVideoConfig) MarshalYAML() ([]byte, error) {
+	cpy := *c
+	if cpy.Quality != nil {
+		cpy.Quality = cpy.Quality.serializable()
+	}
+	return yaml.Marshal(cpy)
 }
 
 type AudioTrackDecodingConfig struct {
@@ -87,8 +116,8 @@ func (cfg DecodeAudioConfig) GetCustomOptions() CustomOptions {
 }
 
 type AudioTrackEncodingConfig struct {
-	InputTrackIDs []int
-	EncodeAudioConfig
+	InputTrackIDs []int             `json:"input_track_ids,omitempty" yaml:"input_track_ids,omitempty"`
+	Config        EncodeAudioConfig `json:"config,omitempty" yaml:"config,omitempty"`
 }
 
 type EncodeAudioConfig struct {
@@ -114,13 +143,32 @@ func (c *EncodeAudioConfig) UnmarshalJSON(b []byte) (_err error) {
 }
 
 func (c *EncodeAudioConfig) UnmarshalYAML(b []byte) (_err error) {
-	c.Quality = audioQualitySerializable{}
-	err := yaml.Unmarshal(b, c)
+	m := map[string]any{}
+	err := yaml.Unmarshal(b, m)
+	if err != nil {
+		return fmt.Errorf("unable to unmarshal EncodeAudioConfig bytes to a map: %w", err)
+	}
+	quality := m["quality"]
+	m["quality"] = nil
+	b, err = yaml.Marshal(m)
+	if err != nil {
+		return fmt.Errorf("unable to remarshal back to EncodeAudioConfig from the map: %w", err)
+	}
+	err = yaml.Unmarshal(b, c)
 	if err != nil {
 		return fmt.Errorf("unable to un-JSON-ize: %w", err)
 	}
-	if c.Quality != nil {
-		c.Quality, err = c.Quality.(audioQualitySerializable).Convert()
+	if quality != nil {
+		sb, err := yaml.Marshal(quality)
+		if err != nil {
+			return fmt.Errorf("unable to remarshal back to EncodeAudioConfig from the map: %w", err)
+		}
+		s := audioQualitySerializable{}
+		err = yaml.Unmarshal(sb, &s)
+		if err != nil {
+			return fmt.Errorf("unable to un-JSON-ize: %w", err)
+		}
+		c.Quality, err = s.Convert()
 		if err != nil {
 			return fmt.Errorf("unable to convert the 'quality' field: %w", err)
 		}
@@ -128,9 +176,18 @@ func (c *EncodeAudioConfig) UnmarshalYAML(b []byte) (_err error) {
 	return nil
 }
 
+func (c *EncodeAudioConfig) MarshalYAML() ([]byte, error) {
+	cpy := *c
+	if cpy.Quality != nil {
+		cpy.Quality = cpy.Quality.serializable()
+	}
+	return yaml.Marshal(cpy)
+}
+
 type AudioQuality interface {
 	audioQuality()
 	typeName() string
+	serializable() audioQualitySerializable
 	setValues(vq audioQualitySerializable) error
 }
 
@@ -142,17 +199,26 @@ func (AudioQualityConstantBitrate) typeName() string {
 
 func (AudioQualityConstantBitrate) audioQuality() {}
 
-func (aq AudioQualityConstantBitrate) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]any{
+func (aq AudioQualityConstantBitrate) serializable() audioQualitySerializable {
+	return map[string]any{
 		"type":    aq.typeName(),
 		"bitrate": uint(aq),
-	})
+	}
+}
+
+func (aq AudioQualityConstantBitrate) MarshalJSON() ([]byte, error) {
+	return json.Marshal(aq.serializable())
+}
+
+func (aq AudioQualityConstantBitrate) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(aq.serializable())
 }
 
 func (aq *AudioQualityConstantBitrate) setValues(in audioQualitySerializable) error {
-	bitrate, ok := in["bitrate"].(float64)
+	bitrateR := in["bitrate"]
+	bitrate, ok := bitrateR.(int)
 	if !ok {
-		return fmt.Errorf("have not found float64 value using key 'bitrate' in %#+v", in)
+		return fmt.Errorf("have not found int value using key 'bitrate' in %#+v, found %T, instead", in, bitrateR)
 	}
 
 	*aq = AudioQualityConstantBitrate(bitrate)
@@ -168,20 +234,22 @@ func (aq audioQualitySerializable) typeName() string {
 	return result
 }
 
+func (aq audioQualitySerializable) serializable() audioQualitySerializable {
+	return aq
+}
+
 func (aq audioQualitySerializable) setValues(in audioQualitySerializable) error {
 	for k := range aq {
 		delete(aq, k)
 	}
-	for k, v := range in {
-		aq[k] = v
-	}
+	maps.Copy(aq, in)
 	return nil
 }
 
 func (aq audioQualitySerializable) Convert() (AudioQuality, error) {
 	typeName, ok := aq["type"].(string)
 	if !ok {
-		return nil, fmt.Errorf("field 'type' is not set")
+		return nil, nil
 	}
 
 	var r AudioQuality
@@ -198,7 +266,7 @@ func (aq audioQualitySerializable) Convert() (AudioQuality, error) {
 	}
 
 	if err := r.setValues(aq); err != nil {
-		return nil, fmt.Errorf("unable to convert the value: %w", err)
+		return nil, fmt.Errorf("unable to convert the value (aq): %w", err)
 	}
 	return r, nil
 }
@@ -255,6 +323,7 @@ func (ac *AudioCodec) UnmarshalJSON(b []byte) error {
 type VideoQuality interface {
 	videoQuality()
 	typeName() string
+	serializable() videoQualitySerializable
 	setValues(vq videoQualitySerializable) error
 }
 
@@ -266,17 +335,25 @@ func (VideoQualityConstantBitrate) typeName() string {
 
 func (VideoQualityConstantBitrate) videoQuality() {}
 
-func (vq VideoQualityConstantBitrate) MarshalJSON() ([]byte, error) {
-	return json.Marshal(videoQualitySerializable{
+func (vq VideoQualityConstantBitrate) serializable() videoQualitySerializable {
+	return videoQualitySerializable{
 		"type":    vq.typeName(),
 		"bitrate": uint(vq),
-	})
+	}
+}
+
+func (vq VideoQualityConstantBitrate) MarshalJSON() ([]byte, error) {
+	return json.Marshal(vq.serializable())
+}
+
+func (vq VideoQualityConstantBitrate) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(vq.serializable())
 }
 
 func (vq *VideoQualityConstantBitrate) setValues(in videoQualitySerializable) error {
-	bitrate, ok := in["bitrate"].(float64)
+	bitrate, ok := in["bitrate"].(int)
 	if !ok {
-		return fmt.Errorf("have not found float64 value using key 'bitrate' in %#+v", in)
+		return fmt.Errorf("have not found int value using key 'bitrate' in %#+v", in)
 	}
 
 	*vq = VideoQualityConstantBitrate(bitrate)
@@ -291,11 +368,19 @@ func (VideoQualityConstantQuality) typeName() string {
 
 func (VideoQualityConstantQuality) videoQuality() {}
 
-func (vq VideoQualityConstantQuality) MarshalJSON() ([]byte, error) {
-	return json.Marshal(videoQualitySerializable{
+func (vq VideoQualityConstantQuality) serializable() videoQualitySerializable {
+	return videoQualitySerializable{
 		"type":    vq.typeName(),
 		"quality": uint(vq),
-	})
+	}
+}
+
+func (vq VideoQualityConstantQuality) MarshalJSON() ([]byte, error) {
+	return json.Marshal(vq.serializable())
+}
+
+func (vq VideoQualityConstantQuality) MarshalYAML() ([]byte, error) {
+	return yaml.Marshal(vq.serializable())
 }
 
 func (vq *VideoQualityConstantQuality) setValues(in videoQualitySerializable) error {
@@ -317,6 +402,10 @@ func (vq videoQualitySerializable) typeName() string {
 	return result
 }
 
+func (vq videoQualitySerializable) serializable() videoQualitySerializable {
+	return vq
+}
+
 func (vq videoQualitySerializable) setValues(in videoQualitySerializable) error {
 	for k := range vq {
 		delete(vq, k)
@@ -330,7 +419,7 @@ func (vq videoQualitySerializable) setValues(in videoQualitySerializable) error 
 func (vq videoQualitySerializable) Convert() (VideoQuality, error) {
 	typeName, ok := vq["type"].(string)
 	if !ok {
-		return nil, fmt.Errorf("field 'type' is not set")
+		return nil, nil
 	}
 
 	var r VideoQuality
@@ -348,7 +437,7 @@ func (vq videoQualitySerializable) Convert() (VideoQuality, error) {
 	}
 
 	if err := r.setValues(vq); err != nil {
-		return nil, fmt.Errorf("unable to convert the value: %w", err)
+		return nil, fmt.Errorf("unable to convert the value (vq): %w", err)
 	}
 	return r, nil
 }
