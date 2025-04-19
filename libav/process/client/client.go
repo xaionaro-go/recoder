@@ -216,6 +216,7 @@ func (c *Client) StartRecoding(
 	}
 	defer conn.Close()
 
+	logger.Debugf(ctx, "client.StartRecoding(ctx, %d, %d, %#+v)", inputID, outputID, config)
 	_, err = client.StartRecoding(ctx, &recoder_grpc.StartRecodingRequest{
 		ContextID: uint64(contextID),
 		InputID:   uint64(inputID),

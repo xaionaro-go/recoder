@@ -10,11 +10,14 @@ import (
 	"sync/atomic"
 
 	"github.com/asticode/go-astiav"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/facebookincubator/go-belt"
 	"github.com/facebookincubator/go-belt/tool/logger"
 	"github.com/xaionaro-go/avpipeline"
 	"github.com/xaionaro-go/avpipeline/codec"
 	"github.com/xaionaro-go/avpipeline/kernel"
+	"github.com/xaionaro-go/avpipeline/math/condition"
+	packetcondition "github.com/xaionaro-go/avpipeline/packet/condition"
 	"github.com/xaionaro-go/avpipeline/processor"
 	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder/libav/grpc/go/recoder_grpc"
@@ -32,6 +35,7 @@ type OutputID uint64
 
 type Context struct {
 	InputNode        *avpipeline.Node[*processor.FromKernel[*kernel.Input]]
+	OutputNode       *avpipeline.Node[*processor.FromKernel[*kernel.Output]]
 	CloseOnce        sync.Once
 	RecordingEndChan chan struct{}
 }
@@ -90,13 +94,13 @@ func (srv *GRPCServer) Serve(
 	}
 	srv.IsStarted = true
 	srv.Belt = belt.CtxBelt(ctx)
-	logger.Debugf(srv.ctx(context.Background()), "srv.GRPCServer.Serve")
+	logger.FromBelt(srv.Belt).Debugf("srv.GRPCServer.Serve")
 	return srv.GRPCServer.Serve(listener)
 }
 
 func (srv *GRPCServer) belt() *belt.Belt {
 	ctx := context.TODO()
-	return xsync.DoR1(ctx, &srv.BeltLocker, func() *belt.Belt {
+	return xsync.DoR1(xsync.WithNoLogging(ctx, true), &srv.BeltLocker, func() *belt.Belt {
 		return srv.Belt
 	})
 }
@@ -112,6 +116,7 @@ func (srv *GRPCServer) SetLoggingLevel(
 	req *recoder_grpc.SetLoggingLevelRequest,
 ) (*recoder_grpc.SetLoggingLevelReply, error) {
 	ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "SetLoggingLevel: %#+v", req)
 	srv.BeltLocker.Do(ctx, func() {
 		logLevel := logLevelProtobuf2Go(req.GetLevel())
 		l := logger.FromBelt(srv.Belt).WithLevel(logLevel)
@@ -124,8 +129,8 @@ func (srv *GRPCServer) NewInput(
 	ctx context.Context,
 	req *recoder_grpc.NewInputRequest,
 ) (*recoder_grpc.NewInputReply, error) {
-	//ctx = srv.ctx(ctx)
-	logger.Debugf(ctx, "NewInput")
+	ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "NewInput: %#+v", req)
 	switch path := req.Path.GetResourcePath().(type) {
 	case *recoder_grpc.ResourcePath_Url:
 		return srv.newInputByURL(ctx, path, req.Config)
@@ -214,8 +219,8 @@ func (srv *GRPCServer) NewOutput(
 	ctx context.Context,
 	req *recoder_grpc.NewOutputRequest,
 ) (*recoder_grpc.NewOutputReply, error) {
-	//ctx = srv.ctx(ctx)
-	logger.Debugf(ctx, "NewOutput")
+	ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "NewOutput: %#+v", req)
 	switch path := req.Path.GetResourcePath().(type) {
 	case *recoder_grpc.ResourcePath_Url:
 		return srv.newOutputByURL(ctx, path, req.Config)
@@ -309,7 +314,7 @@ func (srv *GRPCServer) NewContext(
 	ctx context.Context,
 	req *recoder_grpc.NewContextRequest,
 ) (*recoder_grpc.NewContextReply, error) {
-	//ctx = srv.ctx(ctx)
+	ctx = srv.ctx(ctx)
 	logger.Debugf(ctx, "NewContext")
 	contextInstance := &Context{
 		RecordingEndChan: make(chan struct{}),
@@ -328,8 +333,8 @@ func (srv *GRPCServer) StartRecoding(
 	ctx context.Context,
 	req *recoder_grpc.StartRecodingRequest,
 ) (*recoder_grpc.StartRecodingReply, error) {
-	//ctx = srv.ctx(ctx)
-	logger.Debugf(ctx, "StartRecoding")
+	ctx = srv.ctx(ctx)
+	logger.Debugf(ctx, "StartRecoding: %s", spew.Sdump(req))
 
 	contextID := ContextID(req.GetContextID())
 	inputID := InputID(req.GetInputID())
@@ -369,6 +374,7 @@ func (srv *GRPCServer) StartRecoding(
 		output,
 		processor.DefaultOptionsOutput()...,
 	)
+	srvContext.OutputNode = outputNode
 
 	hasRecoder := false
 	if encoderCfg := req.GetConfig(); encoderCfg != nil {
@@ -402,13 +408,16 @@ func (srv *GRPCServer) StartRecoding(
 				processor.DefaultOptionsRecoder()...,
 			)
 			inputNode.PushPacketsTo.Add(decoderNode)
+			videoOpts := astiav.NewDictionary()
+			setFinalizerFree(ctx, videoOpts)
+			videoOpts.Set("g", "10", 0)
 			encoderNode := avpipeline.NewNodeFromKernel(
 				pipelineCtx,
 				kernel.NewEncoder(
 					pipelineCtx,
 					codec.NewNaiveEncoderFactory(
 						pipelineCtx,
-						videoTrack.Config.Codec.String(),
+						optimalVideoCodec(videoTrack.Config.Codec),
 						audioTrack.Config.Codec.String(),
 						0, "",
 						nil, nil,
@@ -425,9 +434,20 @@ func (srv *GRPCServer) StartRecoding(
 				),
 				processor.DefaultOptionsRecoder()...,
 			)
-			decoderNode.PushPacketsTo.Add(mergerNode)
-			mergerNode.PushPacketsTo.Add(encoderNode)
-			encoderNode.PushPacketsTo.Add(outputNode)
+			waiterNode := avpipeline.NewNodeFromKernel(
+				pipelineCtx,
+				kernel.NewWait(
+					packetcondition.Not{packetcondition.SeenStreamCount(condition.GreaterOrEqual[uint](2))},
+					nil,
+					1000,
+					1000,
+				),
+				processor.DefaultOptionsRecoder()...,
+			)
+			decoderNode.PushFramesTo.Add(mergerNode)
+			mergerNode.PushFramesTo.Add(encoderNode)
+			encoderNode.PushPacketsTo.Add(waiterNode)
+			waiterNode.PushPacketsTo.Add(outputNode)
 		}
 	}
 	if !hasRecoder {
@@ -455,7 +475,7 @@ func (srv *GRPCServer) StartRecoding(
 				}
 			}
 		})
-		logger.Debugf(ctx, "pipeline.Serve")
+		logger.Debugf(ctx, "pipeline.Serve: %s", inputNode.String())
 		avpipeline.ServeRecursively(pipelineCtx, avpipeline.ServeConfig{}, errCh, inputNode)
 	})
 
@@ -492,7 +512,7 @@ func (srv *GRPCServer) GetStats(
 	return xsync.DoR2(ctx, &srv.ContextLocker, func() (*recoder_grpc.GetRecoderStatsReply, error) {
 		context := srv.Context[ContextID(req.GetContextID())]
 		readStats := context.InputNode.GetStatistics().GetStats()
-		writeStats := context.InputNode.PushPacketsTo[0].Node.GetStatistics().GetStats()
+		writeStats := context.OutputNode.GetStatistics().GetStats()
 		return &recoder_grpc.GetRecoderStatsReply{
 			BytesCountRead:  readStats.BytesCountWrote,
 			BytesCountWrote: writeStats.BytesCountRead,

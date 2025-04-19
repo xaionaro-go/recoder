@@ -4,10 +4,6 @@ go 1.24.1
 
 replace github.com/asticode/go-astiav v0.35.1 => github.com/xaionaro-go/astiav v0.0.0-20250401003159-fe890da0a1a9
 
-replace github.com/xaionaro-go/avpipeline v0.0.0-20250407015002-37433bbb12f2 => ../avpipeline
-
-replace github.com/xaionaro-go/serializable v0.0.0-0-0 => ../serializable
-
 require (
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
 	github.com/asticode/go-astiav v0.35.1
@@ -17,11 +13,10 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
-	github.com/xaionaro-go/avpipeline v0.0.0-20250407015002-37433bbb12f2
+	github.com/xaionaro-go/avpipeline v0.0.0-20250419161030-0dd37380c6e6
 	github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42
 	github.com/xaionaro-go/observability v0.0.0-20250309200059-047fad8d76e4
 	github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2
-	github.com/xaionaro-go/serializable v0.0.0-0-0
 	github.com/xaionaro-go/typing v0.0.0-20221123235249-2229101d38ba
 	github.com/xaionaro-go/xcontext v0.0.0-20250111150717-e70e1f5b299c
 	github.com/xaionaro-go/xlogrus v0.0.0-20250111150201-60557109545a
@@ -34,31 +29,19 @@ require (
 )
 
 require (
-	github.com/auth0/go-jwt-middleware v0.0.0-20190805220309-36081240882b // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/iancoleman/strcase v0.3.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/neelance/astrewrite v0.0.0-20160511093645-99348263ae86 // indirect
-	github.com/neelance/sourcemap v0.0.0-20200213170602-2833bce08e4c // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
-	github.com/shurcooL/httpfs v0.0.0-20190707220628-8d4bc4ba7749 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
-	github.com/spf13/cobra v1.2.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/term v0.31.0 // indirect
-	golang.org/x/tools v0.32.0 // indirect
 )
 
 require (
-	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/DataDog/gostackparse v0.7.0 // indirect
 	github.com/asticode/go-astikit v0.54.0 // indirect
-	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
+	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-ng/container v0.0.0-20220615121757-4740bf4bbc52 // indirect
 	github.com/go-ng/slices v0.0.0-20230703171042-6195d35636a2 // indirect
@@ -68,25 +51,20 @@ require (
 	github.com/go-redis/redis/v7 v7.4.1 // indirect
 	github.com/goccy/go-yaml v1.17.1
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
-	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/huandu/go-tls v1.0.1 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/magiconair/properties v1.8.10 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/onsi/gomega v1.37.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/phuslu/goid v1.0.2 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spf13/afero v1.14.0 // indirect
 	github.com/spf13/cast v1.7.1 // indirect
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/viper v1.20.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/xaionaro-go/avmediacodec v0.0.0-20250406231401-a2c73dde769f // indirect
@@ -104,7 +82,5 @@ require (
 	golang.org/x/sys v0.32.0 // indirect
 	golang.org/x/text v0.24.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250409194420-de1ac958c67a // indirect
-	gopkg.in/ini.v1 v1.67.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 	lukechampine.com/blake3 v1.4.0 // indirect
 )

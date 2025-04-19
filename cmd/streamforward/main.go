@@ -26,6 +26,7 @@ func main() {
 	loggerLevel := logger.LevelWarning
 	pflag.Var(&loggerLevel, "log-level", "Log level")
 	netPprofAddr := pflag.String("net-pprof-listen-addr", "", "an address to listen for incoming net/pprof connections")
+	doRecode := pflag.Bool("recode", false, "")
 	pflag.Parse()
 	if len(pflag.Args()) != 2 {
 		pflag.Usage()
@@ -40,6 +41,7 @@ func main() {
 	}
 	defer belt.Flush(ctx)
 	ctx = xsync.WithNoLogging(ctx, true)
+	observability.LogLevelFilter.SetLevel(loggerLevel)
 
 	if *netPprofAddr != "" {
 		observability.Go(ctx, func() { l.Error(http.ListenAndServe(*netPprofAddr, nil)) })
@@ -69,8 +71,28 @@ func main() {
 		l.Fatal(err)
 	}
 
+	cfg := recoder.EncodersConfig{}
+	if *doRecode {
+		cfg = recoder.EncodersConfig{
+			OutputAudioTracks: []recoder.AudioTrackEncodingConfig{{
+				InputTrackIDs: []int{0, 1, 2, 3, 4, 5, 6, 7},
+				Config: recoder.EncodeAudioConfig{
+					Codec:   recoder.AudioCodecAAC,
+					Quality: ptr(recoder.AudioQualityConstantBitrate(160_000)),
+				},
+			}},
+			OutputVideoTracks: []recoder.VideoTrackEncodingConfig{{
+				InputTrackIDs: []int{0, 1, 2, 3, 4, 5, 6, 7},
+				Config: recoder.EncodeVideoConfig{
+					Codec:   recoder.VideoCodecH264,
+					Quality: ptr(recoder.VideoQualityConstantBitrate(6_000_000)),
+				},
+			}},
+		}
+	}
+
 	l.Debugf("initializing an encoder...")
-	encoder, err := f.NewEncoder(ctx, recoder.EncodersConfig{})
+	encoder, err := f.NewEncoder(ctx, cfg)
 	if err != nil {
 		l.Fatal(err)
 	}

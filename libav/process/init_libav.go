@@ -46,8 +46,10 @@ func runEncoder() {
 
 	fmt.Fprintf(os.Stdout, "%s\n", b)
 
+	loggingLevelStr := os.Getenv(EnvKeyLogLevel)
+
 	var loggerLevel logger.Level
-	loggerLevel.Set(os.Getenv(EnvKeyLogLevel))
+	err = loggerLevel.Set(loggingLevelStr)
 	l := logrus.Default().WithLevel(loggerLevel)
 	ctx := logger.CtxWithLogger(context.Background(), l)
 	ctx, cancelFn := context.WithCancel(ctx)
@@ -55,7 +57,14 @@ func runEncoder() {
 	logger.Default = func() logger.Logger {
 		return l
 	}
+	belt.Default = func() *belt.Belt {
+		return belt.CtxBelt(ctx)
+	}
 	defer belt.Flush(ctx)
+
+	if err != nil {
+		logger.Errorf(context.Background(), "unable to parse the logging level '%s': %v", loggingLevelStr, err)
+	}
 
 	logger.Debugf(ctx, "logging level: %s", loggerLevel)
 
