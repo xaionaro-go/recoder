@@ -13,6 +13,7 @@ service Recoder {
     rpc StartRecoding(StartRecodingRequest) returns (StartRecodingReply) {}
     rpc GetStats(GetRecoderStatsRequest) returns (GetRecoderStatsReply) {}
 	rpc RecodingEndedChan(RecodingEndedChanRequest) returns (stream RecodingEndedChanReply) {}
+    rpc Die(DieRequest) returns (DieReply) {}
 }
 
 enum LoggingLevel {
@@ -171,3 +172,6 @@ message RecodingEndedChanRequest {
     uint64 contextID = 1;
 }
 message RecodingEndedChanReply {}
+
+message DieRequest {}
+message DieReply {}

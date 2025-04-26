@@ -36,6 +36,25 @@ func (c *Client) grpcClient() (recoder_grpc.RecoderClient, *grpc.ClientConn, err
 	return client, conn, nil
 }
 
+func (c *Client) Die(
+	ctx context.Context,
+) (_err error) {
+	logger.Debugf(ctx, "Die(ctx)")
+	defer func() { logger.Debugf(ctx, "/Die(ctx): %v", _err) }()
+
+	client, conn, err := c.grpcClient()
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	_, err = client.Die(ctx, &recoder_grpc.DieRequest{})
+	if err != nil {
+		return fmt.Errorf("query error: %w", err)
+	}
+	return nil
+}
+
 func (c *Client) SetLoggingLevel(
 	ctx context.Context,
 	logLevel logger.Level,

@@ -17,8 +17,10 @@ import (
 	"github.com/xaionaro-go/avpipeline/codec"
 	"github.com/xaionaro-go/avpipeline/kernel"
 	"github.com/xaionaro-go/avpipeline/math/condition"
+	"github.com/xaionaro-go/avpipeline/packet"
 	packetcondition "github.com/xaionaro-go/avpipeline/packet/condition"
 	"github.com/xaionaro-go/avpipeline/processor"
+	"github.com/xaionaro-go/avpipeline/types"
 	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder/libav/grpc/go/recoder_grpc"
 	"github.com/xaionaro-go/recoder/libav/grpc/goconv"
@@ -37,6 +39,7 @@ type Context struct {
 	InputNode        *avpipeline.Node[*processor.FromKernel[*kernel.Input]]
 	OutputNode       *avpipeline.Node[*processor.FromKernel[*kernel.Output]]
 	CloseOnce        sync.Once
+	RecoderCancelFn  context.CancelFunc
 	RecordingEndChan chan struct{}
 }
 
@@ -197,22 +200,27 @@ func (srv *GRPCServer) CloseInput(
 	req *recoder_grpc.CloseInputRequest,
 ) (*recoder_grpc.CloseInputReply, error) {
 	inputID := InputID(req.GetInputID())
-	err := xsync.DoR1(ctx, &srv.InputLocker, func() error {
-		input := srv.Input[inputID]
-		if input == nil {
-			return fmt.Errorf("there is no open input with ID %d", inputID)
-		}
-		err := input.Close(ctx)
-		if err != nil {
-			logger.Errorf(ctx, "unable to close the input: %v", err)
-		}
-		delete(srv.Input, inputID)
-		return nil
-	})
+	err := xsync.DoA2R1(ctx, &srv.InputLocker, srv.closeInput, ctx, inputID)
 	if err != nil {
 		return nil, err
 	}
 	return &recoder_grpc.CloseInputReply{}, nil
+}
+
+func (srv *GRPCServer) closeInput(
+	ctx context.Context,
+	inputID InputID,
+) error {
+	input := srv.Input[inputID]
+	if input == nil {
+		return fmt.Errorf("there is no open input with ID %d", inputID)
+	}
+	err := input.Close(ctx)
+	if err != nil {
+		logger.Errorf(ctx, "unable to close the input: %v", err)
+	}
+	delete(srv.Input, inputID)
+	return nil
 }
 
 func (srv *GRPCServer) NewOutput(
@@ -292,22 +300,27 @@ func (srv *GRPCServer) CloseOutput(
 	req *recoder_grpc.CloseOutputRequest,
 ) (*recoder_grpc.CloseOutputReply, error) {
 	outputID := OutputID(req.GetOutputID())
-	err := xsync.DoR1(ctx, &srv.InputLocker, func() error {
-		output := srv.Output[outputID]
-		if output == nil {
-			return fmt.Errorf("there is no open output with ID %d", outputID)
-		}
-		err := output.Close(ctx)
-		if err != nil {
-			logger.Errorf(ctx, "unable to close the output: %v", err)
-		}
-		delete(srv.Output, outputID)
-		return nil
-	})
+	err := xsync.DoA2R1(ctx, &srv.InputLocker, srv.closeOutput, ctx, outputID)
 	if err != nil {
 		return nil, err
 	}
 	return &recoder_grpc.CloseOutputReply{}, nil
+}
+
+func (srv *GRPCServer) closeOutput(
+	ctx context.Context,
+	outputID OutputID,
+) error {
+	output := srv.Output[outputID]
+	if output == nil {
+		return fmt.Errorf("there is no open output with ID %d", outputID)
+	}
+	err := output.Close(ctx)
+	if err != nil {
+		logger.Errorf(ctx, "unable to close the output: %v", err)
+	}
+	delete(srv.Output, outputID)
+	return nil
 }
 
 func (srv *GRPCServer) NewContext(
@@ -351,6 +364,10 @@ func (srv *GRPCServer) StartRecoding(
 	if srvContext == nil {
 		return nil, fmt.Errorf("the recorder with ID '%v' does not exist", contextID)
 	}
+	if srvContext.RecoderCancelFn != nil {
+		return nil, fmt.Errorf("the recoder is already started")
+	}
+
 	input := srv.Input[inputID]
 	if input == nil {
 		return nil, fmt.Errorf("the input with ID '%v' does not exist", inputID)
@@ -361,6 +378,7 @@ func (srv *GRPCServer) StartRecoding(
 	}
 
 	pipelineCtx, cancelFn := context.WithCancel(xcontext.DetachDone(ctx))
+	srvContext.RecoderCancelFn = cancelFn
 
 	inputNode := avpipeline.NewNodeFromKernel(
 		pipelineCtx,
@@ -380,23 +398,36 @@ func (srv *GRPCServer) StartRecoding(
 	if encoderCfg := req.GetConfig(); encoderCfg != nil {
 		encoderCfg, isEnabled := goconv.EncoderConfigFromThrift(encoderCfg)
 		if isEnabled {
+			streamsMerger, err := newFrameStreamsMerger(encoderCfg)
+			if err != nil {
+				cancelFn()
+				return nil, fmt.Errorf("unable to initialize frame streams merger: %w", err)
+			}
 			if len(encoderCfg.OutputVideoTracks) > 1 {
 				cancelFn()
 				return nil, fmt.Errorf("we currently support recoding to a single video track at most only, but requested %d video tracks", len(encoderCfg.OutputVideoTracks))
 			}
-			videoTrack := encoderCfg.OutputVideoTracks[0]
-			if !slices.Equal(videoTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
-				cancelFn()
-				return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
+			var vCodec string
+			if len(encoderCfg.OutputVideoTracks) == 1 {
+				videoTrack := encoderCfg.OutputVideoTracks[0]
+				if !slices.Equal(videoTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
+					cancelFn()
+					return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
+				}
+				vCodec = optimalVideoCodec(videoTrack.Config.Codec)
 			}
+			var aCodec string
 			if len(encoderCfg.OutputAudioTracks) > 1 {
 				cancelFn()
 				return nil, fmt.Errorf("we currently support recoding to a single audio track at most only, but requested %d audio tracks", len(encoderCfg.OutputAudioTracks))
 			}
-			audioTrack := encoderCfg.OutputAudioTracks[0]
-			if !slices.Equal(audioTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
-				cancelFn()
-				return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
+			if len(encoderCfg.OutputAudioTracks) == 1 {
+				audioTrack := encoderCfg.OutputAudioTracks[0]
+				if !slices.Equal(audioTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
+					cancelFn()
+					return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
+				}
+				aCodec = audioTrack.Config.Codec.String()
 			}
 			hasRecoder = true
 			decoderNode := avpipeline.NewNodeFromKernel(
@@ -411,7 +442,19 @@ func (srv *GRPCServer) StartRecoding(
 				),
 				processor.DefaultOptionsRecoder()...,
 			)
-			inputNode.PushPacketsTo.Add(decoderNode)
+			inputNode.PushPacketsTo.Add(
+				decoderNode,
+				packetcondition.Function(func(ctx context.Context, pkt packet.Input) bool {
+					outStreamID, err := streamsMerger.StreamIndexAssign(ctx, types.InputPacketOrFrameUnion{
+						Packet: &pkt,
+					})
+					if err != nil {
+						logger.Errorf(ctx, "unable to get the output stream ID: %w", err)
+						return false
+					}
+					return outStreamID.IsSet()
+				}),
+			)
 			videoOpts := astiav.NewDictionary()
 			setFinalizerFree(ctx, videoOpts)
 			videoOpts.Set("g", "10", 0)
@@ -421,8 +464,7 @@ func (srv *GRPCServer) StartRecoding(
 					pipelineCtx,
 					codec.NewNaiveEncoderFactory(
 						pipelineCtx,
-						optimalVideoCodec(videoTrack.Config.Codec),
-						audioTrack.Config.Codec.String(),
+						vCodec, aCodec,
 						0, "",
 						nil, nil,
 					),
@@ -430,11 +472,6 @@ func (srv *GRPCServer) StartRecoding(
 				),
 				processor.DefaultOptionsRecoder()...,
 			)
-			streamsMerger, err := newFrameStreamsMerger(encoderCfg)
-			if err != nil {
-				cancelFn()
-				return nil, fmt.Errorf("unable to initialize frame streams merger: %w", err)
-			}
 			mergerNode := avpipeline.NewNodeFromKernel(
 				pipelineCtx,
 				kernel.NewMapStreamIndices(
@@ -446,7 +483,9 @@ func (srv *GRPCServer) StartRecoding(
 			waiterNode := avpipeline.NewNodeFromKernel(
 				pipelineCtx,
 				kernel.NewWait(
-					packetcondition.Not{packetcondition.SeenStreamCount(condition.GreaterOrEqual[uint](2))},
+					packetcondition.Not{packetcondition.SeenStreamCount(condition.GreaterOrEqual(uint(
+						len(encoderCfg.OutputVideoTracks) + len(encoderCfg.OutputAudioTracks),
+					)))},
 					nil,
 					1000,
 					1000,
@@ -469,7 +508,7 @@ func (srv *GRPCServer) StartRecoding(
 			srvContext.Close()
 		}()
 		defer cancelFn()
-		errCh := make(chan avpipeline.ErrNode, 1)
+		errCh := make(chan avpipeline.ErrNode, 10)
 
 		observability.Go(ctx, func() {
 			defer logger.Debugf(ctx, "/errCh listener")
@@ -527,4 +566,43 @@ func (srv *GRPCServer) GetStats(
 			BytesCountWrote: writeStats.BytesCountRead,
 		}, nil
 	})
+}
+
+func (srv *GRPCServer) Die(
+	ctx context.Context,
+	req *recoder_grpc.DieRequest,
+) (*recoder_grpc.DieReply, error) {
+	srv.ContextLocker.ManualLock(ctx)
+	srv.InputLocker.ManualLock(ctx)
+	srv.OutputLocker.ManualLock(ctx)
+	defer srv.ContextLocker.ManualUnlock(ctx)
+	defer srv.InputLocker.ManualUnlock(ctx)
+	defer srv.OutputLocker.ManualUnlock(ctx)
+
+	for key, ctx := range srv.Context {
+		ctx.RecoderCancelFn()
+		ctx.RecoderCancelFn = nil
+		delete(srv.Context, key)
+	}
+
+	var inputIDs []InputID
+	for inputID := range srv.Input {
+		inputIDs = append(inputIDs, inputID)
+	}
+
+	var outputIDs []InputID
+	for outputID := range srv.Input {
+		outputIDs = append(outputIDs, outputID)
+	}
+
+	for _, inputID := range inputIDs {
+		srv.closeInput(ctx, inputID)
+	}
+
+	for _, outputID := range outputIDs {
+		srv.closeInput(ctx, outputID)
+	}
+
+	srv.GRPCServer.Stop()
+	return &recoder_grpc.DieReply{}, nil
 }

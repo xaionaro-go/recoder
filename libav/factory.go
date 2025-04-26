@@ -33,9 +33,10 @@ func NewFactory(ctx context.Context) (*Factory, error) {
 }
 
 func (f *Factory) Close() error {
+	ctx := context.TODO()
 	return errors.Join(
 		f.Context.Close(),
-		f.Process.Kill(),
+		f.Process.Kill(ctx),
 	)
 }
 

@@ -24,7 +24,7 @@ func NewProcess(ctx context.Context) (*Process, error) {
 		processBackend: recoderProcess,
 	}
 	runtime.SetFinalizer(p, func(p *Process) {
-		err := p.Kill()
+		err := p.Kill(ctx)
 		logger.Debugf(ctx, "kill result: %v", err)
 	})
 	return p, nil

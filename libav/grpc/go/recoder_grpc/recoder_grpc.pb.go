@@ -27,6 +27,7 @@ type RecoderClient interface {
 	StartRecoding(ctx context.Context, in *StartRecodingRequest, opts ...grpc.CallOption) (*StartRecodingReply, error)
 	GetStats(ctx context.Context, in *GetRecoderStatsRequest, opts ...grpc.CallOption) (*GetRecoderStatsReply, error)
 	RecodingEndedChan(ctx context.Context, in *RecodingEndedChanRequest, opts ...grpc.CallOption) (Recoder_RecodingEndedChanClient, error)
+	Die(ctx context.Context, in *DieRequest, opts ...grpc.CallOption) (*DieReply, error)
 }
 
 type recoderClient struct {
@@ -150,6 +151,15 @@ func (x *recoderRecodingEndedChanClient) Recv() (*RecodingEndedChanReply, error)
 	return m, nil
 }
 
+func (c *recoderClient) Die(ctx context.Context, in *DieRequest, opts ...grpc.CallOption) (*DieReply, error) {
+	out := new(DieReply)
+	err := c.cc.Invoke(ctx, "/recoder_grpc.Recoder/Die", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RecoderServer is the server API for Recoder service.
 // All implementations must embed UnimplementedRecoderServer
 // for forward compatibility
@@ -164,6 +174,7 @@ type RecoderServer interface {
 	StartRecoding(context.Context, *StartRecodingRequest) (*StartRecodingReply, error)
 	GetStats(context.Context, *GetRecoderStatsRequest) (*GetRecoderStatsReply, error)
 	RecodingEndedChan(*RecodingEndedChanRequest, Recoder_RecodingEndedChanServer) error
+	Die(context.Context, *DieRequest) (*DieReply, error)
 	mustEmbedUnimplementedRecoderServer()
 }
 
@@ -200,6 +211,9 @@ func (UnimplementedRecoderServer) GetStats(context.Context, *GetRecoderStatsRequ
 }
 func (UnimplementedRecoderServer) RecodingEndedChan(*RecodingEndedChanRequest, Recoder_RecodingEndedChanServer) error {
 	return status.Errorf(codes.Unimplemented, "method RecodingEndedChan not implemented")
+}
+func (UnimplementedRecoderServer) Die(context.Context, *DieRequest) (*DieReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Die not implemented")
 }
 func (UnimplementedRecoderServer) mustEmbedUnimplementedRecoderServer() {}
 
@@ -397,6 +411,24 @@ func (x *recoderRecodingEndedChanServer) Send(m *RecodingEndedChanReply) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Recoder_Die_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DieRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecoderServer).Die(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/recoder_grpc.Recoder/Die",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecoderServer).Die(ctx, req.(*DieRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Recoder_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "recoder_grpc.Recoder",
 	HandlerType: (*RecoderServer)(nil),
@@ -436,6 +468,10 @@ var _Recoder_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetStats",
 			Handler:    _Recoder_GetStats_Handler,
+		},
+		{
+			MethodName: "Die",
+			Handler:    _Recoder_Die_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

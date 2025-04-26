@@ -47,17 +47,19 @@ func (m *frameStreamsMerger) StreamIndexAssign(
 		if len(m.encodersConfig.OutputVideoTracks) == 0 {
 			return typing.Optional[int]{}, nil
 		}
-		return typing.Opt(m.allowedVideoTrackIDMap[streamIndex] + 1), nil
+		return typing.Opt(
+			m.allowedVideoTrackIDMap[streamIndex],
+		), nil
 	case astiav.MediaTypeAudio:
 		if len(m.encodersConfig.OutputAudioTracks) == 0 {
 			return typing.Optional[int]{}, nil
 		}
 		return typing.Opt(
-			1 + len(m.allowedVideoTrackIDMap) + m.allowedAudioTrackIDMap[streamIndex],
+			len(m.allowedVideoTrackIDMap) + m.allowedAudioTrackIDMap[streamIndex],
 		), nil
 	default:
 		return typing.Opt(
-			1 + len(m.allowedVideoTrackIDMap) + len(m.allowedAudioTrackIDMap) + streamIndex,
+			len(m.allowedVideoTrackIDMap) + len(m.allowedAudioTrackIDMap) + streamIndex,
 		), nil
 	}
 }
