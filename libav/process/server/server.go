@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net"
-	"slices"
 	"sync"
 	"sync/atomic"
 
@@ -410,10 +409,6 @@ func (srv *GRPCServer) StartRecoding(
 			var vCodec string
 			if len(encoderCfg.OutputVideoTracks) == 1 {
 				videoTrack := encoderCfg.OutputVideoTracks[0]
-				if !slices.Equal(videoTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
-					cancelFn()
-					return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
-				}
 				vCodec = optimalVideoCodec(videoTrack.Config.Codec)
 			}
 			var aCodec string
@@ -423,10 +418,6 @@ func (srv *GRPCServer) StartRecoding(
 			}
 			if len(encoderCfg.OutputAudioTracks) == 1 {
 				audioTrack := encoderCfg.OutputAudioTracks[0]
-				if !slices.Equal(audioTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
-					cancelFn()
-					return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
-				}
 				aCodec = audioTrack.Config.Codec.String()
 			}
 			hasRecoder = true
