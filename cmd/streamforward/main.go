@@ -71,9 +71,9 @@ func main() {
 		l.Fatal(err)
 	}
 
-	cfg := recoder.EncodersConfig{}
+	var cfg *recoder.EncodersConfig
 	if *doRecode {
-		cfg = recoder.EncodersConfig{
+		cfg = &recoder.EncodersConfig{
 			OutputAudioTracks: []recoder.AudioTrackEncodingConfig{{
 				InputTrackIDs: []int{0, 1, 2, 3, 4, 5, 6, 7},
 				Config: recoder.EncodeAudioConfig{

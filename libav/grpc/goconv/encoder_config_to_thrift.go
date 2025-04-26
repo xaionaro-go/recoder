@@ -46,6 +46,8 @@ func AudioCodecToThrift(
 	codec recoder.AudioCodec,
 ) recoder_grpc.AudioCodec {
 	switch codec {
+	case recoder.AudioCodecCopy:
+		return recoder_grpc.AudioCodec_AudioCodecCopy
 	case recoder.AudioCodecAAC:
 		return recoder_grpc.AudioCodec_AudioCodecAAC
 	case recoder.AudioCodecVorbis:
@@ -53,7 +55,7 @@ func AudioCodecToThrift(
 	case recoder.AudioCodecOpus:
 		return recoder_grpc.AudioCodec_AudioCodecOpus
 	default:
-		panic(fmt.Errorf("unexpected codec: '%v'", codec))
+		panic(fmt.Errorf("unexpected audio codec: '%s'", ptr(codec)))
 	}
 }
 
@@ -100,6 +102,8 @@ func VideoCodecToThrift(
 	codec recoder.VideoCodec,
 ) recoder_grpc.VideoCodec {
 	switch codec {
+	case recoder.VideoCodecCopy:
+		return recoder_grpc.VideoCodec_VideoCodecCopy
 	case recoder.VideoCodecH264:
 		return recoder_grpc.VideoCodec_VideoCodecH264
 	case recoder.VideoCodecHEVC:
@@ -107,7 +111,7 @@ func VideoCodecToThrift(
 	case recoder.VideoCodecAV1:
 		return recoder_grpc.VideoCodec_VideoCodecAV1
 	default:
-		panic(fmt.Errorf("unexpected codec: '%v'", codec))
+		panic(fmt.Errorf("unexpected video codec: '%s'", ptr(codec)))
 	}
 }
 

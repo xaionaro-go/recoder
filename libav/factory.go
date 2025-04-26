@@ -48,7 +48,7 @@ func (f *Factory) NewRecoder(
 }
 
 type Encoder struct {
-	Config recoder.EncodersConfig
+	Config *recoder.EncodersConfig
 }
 
 func (Encoder) Close() error {
@@ -57,7 +57,7 @@ func (Encoder) Close() error {
 
 func (f *Factory) NewEncoder(
 	ctx context.Context,
-	cfg recoder.EncodersConfig,
+	cfg *recoder.EncodersConfig,
 ) (recoder.Encoder, error) {
 	return &Encoder{
 		Config: cfg,

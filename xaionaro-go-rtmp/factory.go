@@ -26,7 +26,7 @@ func (Factory) Close() error {
 
 func (Factory) NewEncoder(
 	ctx context.Context,
-	cfg recoder.EncodersConfig,
+	cfg *recoder.EncodersConfig,
 ) (recoder.Encoder, error) {
 	return &Encoder{}, nil
 }

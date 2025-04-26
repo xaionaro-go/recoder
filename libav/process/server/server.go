@@ -380,18 +380,22 @@ func (srv *GRPCServer) StartRecoding(
 	if encoderCfg := req.GetConfig(); encoderCfg != nil {
 		encoderCfg, isEnabled := goconv.EncoderConfigFromThrift(encoderCfg)
 		if isEnabled {
-			if len(encoderCfg.OutputVideoTracks) != 1 {
-				return nil, fmt.Errorf("we currently support recoding to a single video track only, but requested %d video tracks", len(encoderCfg.OutputVideoTracks))
+			if len(encoderCfg.OutputVideoTracks) > 1 {
+				cancelFn()
+				return nil, fmt.Errorf("we currently support recoding to a single video track at most only, but requested %d video tracks", len(encoderCfg.OutputVideoTracks))
 			}
 			videoTrack := encoderCfg.OutputVideoTracks[0]
 			if !slices.Equal(videoTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
+				cancelFn()
 				return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
 			}
-			if len(encoderCfg.OutputAudioTracks) != 1 {
-				return nil, fmt.Errorf("we currently support recoding to a single audio track only, but requested %d audio tracks", len(encoderCfg.OutputAudioTracks))
+			if len(encoderCfg.OutputAudioTracks) > 1 {
+				cancelFn()
+				return nil, fmt.Errorf("we currently support recoding to a single audio track at most only, but requested %d audio tracks", len(encoderCfg.OutputAudioTracks))
 			}
 			audioTrack := encoderCfg.OutputAudioTracks[0]
 			if !slices.Equal(audioTrack.InputTrackIDs, []int{0, 1, 2, 3, 4, 5, 6, 7}) {
+				cancelFn()
 				return nil, fmt.Errorf("we currently expect InputTrackIDs be equal [0, 1, 2, 3, 4, 5, 6, 7]; to be fixed in the future")
 			}
 			hasRecoder = true
@@ -426,11 +430,16 @@ func (srv *GRPCServer) StartRecoding(
 				),
 				processor.DefaultOptionsRecoder()...,
 			)
+			streamsMerger, err := newFrameStreamsMerger(encoderCfg)
+			if err != nil {
+				cancelFn()
+				return nil, fmt.Errorf("unable to initialize frame streams merger: %w", err)
+			}
 			mergerNode := avpipeline.NewNodeFromKernel(
 				pipelineCtx,
 				kernel.NewMapStreamIndices(
 					pipelineCtx,
-					frameStreamsMerger{},
+					streamsMerger,
 				),
 				processor.DefaultOptionsRecoder()...,
 			)
