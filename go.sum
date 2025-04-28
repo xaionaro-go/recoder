@@ -216,6 +216,8 @@ github.com/xaionaro-go/avpipeline v0.0.0-20250421151226-691631b82df8 h1:sS+v5XLs
 github.com/xaionaro-go/avpipeline v0.0.0-20250421151226-691631b82df8/go.mod h1:Czl84biYuPZeILYiRiziR0yeuXKvrqQfzJ1ItjSq/o0=
 github.com/xaionaro-go/avpipeline v0.0.0-20250426193916-e38f676d278e h1:aHUMT1BQBH5u2gqdx70DYEqpMOKIR1hCkGeU1aL3Kp0=
 github.com/xaionaro-go/avpipeline v0.0.0-20250426193916-e38f676d278e/go.mod h1:Czl84biYuPZeILYiRiziR0yeuXKvrqQfzJ1ItjSq/o0=
+github.com/xaionaro-go/avpipeline v0.0.0-20250428012319-401ac2ebe66c h1:KTQYCAJAofdHnjxYC8VV+oMW2WRnxa8wy2o0fNlfueU=
+github.com/xaionaro-go/avpipeline v0.0.0-20250428012319-401ac2ebe66c/go.mod h1:Czl84biYuPZeILYiRiziR0yeuXKvrqQfzJ1ItjSq/o0=
 github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42 h1:izCjREd+62HDF9FRYqUI7dgJNdUxAIysEuqed8lBcDY=
 github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42/go.mod h1:IuQWd+hy/tLuvuqFX0N9SMZrzOprM8Jvvdu+42RJwk4=
 github.com/xaionaro-go/gorex v0.0.0-20241010205749-bcd59d639c4d h1:9DyH0lboWWzKUwiqGmp9sTZ3bSPhgJHiiWgV+hqY9Uo=
