@@ -14,7 +14,11 @@ type Recoder struct {
 	*Client
 }
 
-func (r *Recoder) Kill() error {
+func (r *Recoder) Kill(ctx context.Context) error {
+	return fmt.Errorf("not compiled with libav support")
+}
+
+func (r *Recoder) Wait(ctx context.Context) error {
 	return fmt.Errorf("not compiled with libav support")
 }
 
