@@ -7,7 +7,6 @@ import (
 	"github.com/xaionaro-go/avpipeline/kernel"
 	"github.com/xaionaro-go/avpipeline/types"
 	"github.com/xaionaro-go/recoder"
-	"github.com/xaionaro-go/typing"
 )
 
 type frameStreamsMerger struct {
@@ -40,26 +39,26 @@ func newFrameStreamsMerger(cfg recoder.EncodersConfig) (*frameStreamsMerger, err
 func (m *frameStreamsMerger) StreamIndexAssign(
 	ctx context.Context,
 	input types.InputPacketOrFrameUnion,
-) (typing.Optional[int], error) {
+) ([]int, error) {
 	streamIndex := input.GetStreamIndex()
 	switch input.GetMediaType() {
 	case astiav.MediaTypeVideo:
 		if len(m.encodersConfig.OutputVideoTracks) == 0 {
-			return typing.Optional[int]{}, nil
+			return []int{}, nil
 		}
-		return typing.Opt(
+		return []int{
 			m.allowedVideoTrackIDMap[streamIndex],
-		), nil
+		}, nil
 	case astiav.MediaTypeAudio:
 		if len(m.encodersConfig.OutputAudioTracks) == 0 {
-			return typing.Optional[int]{}, nil
+			return []int{}, nil
 		}
-		return typing.Opt(
+		return []int{
 			len(m.allowedVideoTrackIDMap) + m.allowedAudioTrackIDMap[streamIndex],
-		), nil
+		}, nil
 	default:
-		return typing.Opt(
+		return []int{
 			len(m.allowedVideoTrackIDMap) + len(m.allowedAudioTrackIDMap) + streamIndex,
-		), nil
+		}, nil
 	}
 }
