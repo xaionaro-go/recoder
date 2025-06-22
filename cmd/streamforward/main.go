@@ -44,7 +44,7 @@ func main() {
 	observability.LogLevelFilter.SetLevel(loggerLevel)
 
 	if *netPprofAddr != "" {
-		observability.Go(ctx, func() { l.Error(http.ListenAndServe(*netPprofAddr, nil)) })
+		observability.Go(ctx, func(context.Context) { l.Error(http.ListenAndServe(*netPprofAddr, nil)) })
 	}
 
 	fromURL := pflag.Arg(0)
@@ -109,7 +109,7 @@ func main() {
 		l.Fatal(err)
 	}
 
-	observability.Go(ctx, func() {
+	observability.Go(ctx, func(ctx context.Context) {
 		err := recoder.Wait(ctx)
 		if err != nil {
 			logger.Error(ctx, "unable to wait: %v", err)

@@ -60,7 +60,7 @@ func (pb *Pubsub) deregister() error {
 		for l := range pb.subs {
 			delete(pb.subs, l)
 		}
-		observability.GoSafe(context.TODO(), func() {
+		observability.GoSafe(context.TODO(), func(ctx context.Context) {
 			for _, sub := range subs {
 				_ = sub.Close()
 			}
@@ -109,7 +109,7 @@ func (pb *Pubsub) Sub(
 			sendQueue:     make(chan *flvtag.FlvTag, sendQueueLength),
 			cancelFunc:    cancelFn,
 		}
-		observability.Go(ctx, func() { sub.senderLoop(ctx) })
+		observability.Go(ctx, func(ctx context.Context) { sub.senderLoop(ctx) })
 
 		pb.nextSubID++
 		pb.subs[subID] = sub
@@ -347,7 +347,7 @@ func (s *Sub) Submit(
 			"subscriber #%d queue is full, cannot send a tag; closing the connection, because cannot restore from this",
 			s.subID,
 		)
-		observability.Go(ctx, func() {
+		observability.Go(ctx, func(ctx context.Context) {
 			s.CloseOrLog(ctx)
 		})
 	}

@@ -287,7 +287,7 @@ func (c *Client) RecodingEndedChan(
 
 	result := make(chan struct{})
 	waiter.CloseSend()
-	observability.Go(ctx, func() {
+	observability.Go(ctx, func(ctx context.Context) {
 		defer conn.Close()
 		defer func() {
 			close(result)

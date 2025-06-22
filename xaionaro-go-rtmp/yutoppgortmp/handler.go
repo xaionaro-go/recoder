@@ -212,7 +212,7 @@ func (h *Handler) OnClose() {
 		close(h.closedChan)
 
 		pub, sub := h.pub, h.sub
-		observability.Go(ctx, func() {
+		observability.Go(ctx, func(ctx context.Context) {
 			if pub != nil {
 				_ = pub.Close()
 			}

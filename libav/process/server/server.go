@@ -494,7 +494,7 @@ func (srv *GRPCServer) StartRecoding(
 		inputNode.AddPushPacketsTo(outputNode)
 	}
 
-	observability.Go(ctx, func() {
+	observability.Go(ctx, func(ctx context.Context) {
 		defer logger.Debugf(ctx, "recoding ended")
 		defer func() {
 			srvContext.Close()
@@ -502,7 +502,7 @@ func (srv *GRPCServer) StartRecoding(
 		defer cancelFn()
 		errCh := make(chan avpipeline.ErrNode, 10)
 
-		observability.Go(ctx, func() {
+		observability.Go(ctx, func(ctx context.Context) {
 			defer logger.Debugf(ctx, "/errCh listener")
 			for {
 				select {
