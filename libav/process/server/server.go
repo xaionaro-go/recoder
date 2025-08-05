@@ -17,7 +17,7 @@ import (
 	"github.com/xaionaro-go/avpipeline/kernel"
 	mathcondition "github.com/xaionaro-go/avpipeline/math/condition"
 	"github.com/xaionaro-go/avpipeline/node"
-	"github.com/xaionaro-go/avpipeline/packet"
+	packetfiltercondition "github.com/xaionaro-go/avpipeline/node/filter/packetfilter/condition"
 	packetcondition "github.com/xaionaro-go/avpipeline/packet/condition"
 	"github.com/xaionaro-go/avpipeline/processor"
 	"github.com/xaionaro-go/avpipeline/types"
@@ -431,15 +431,16 @@ func (srv *GRPCServer) StartRecoding(
 						pipelineCtx,
 						0, "",
 						nil, nil,
+						nil,
 					),
 				),
 				processor.DefaultOptionsRecoder()...,
 			)
 			inputNode.AddPushPacketsTo(
 				decoderNode,
-				packetcondition.Function(func(ctx context.Context, pkt packet.Input) bool {
+				packetfiltercondition.Function(func(ctx context.Context, input packetfiltercondition.Input) bool {
 					outStreamID, err := streamsMerger.StreamIndexAssign(ctx, types.InputPacketOrFrameUnion{
-						Packet: &pkt,
+						Packet: &input.Input,
 					})
 					if err != nil {
 						logger.Errorf(ctx, "unable to get the output stream ID: %w", err)
