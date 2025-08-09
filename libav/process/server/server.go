@@ -429,8 +429,6 @@ func (srv *GRPCServer) StartRecoding(
 					pipelineCtx,
 					codec.NewNaiveDecoderFactory(
 						pipelineCtx,
-						0, "",
-						nil, nil,
 						nil,
 					),
 				),
@@ -458,9 +456,10 @@ func (srv *GRPCServer) StartRecoding(
 					pipelineCtx,
 					codec.NewNaiveEncoderFactory(
 						pipelineCtx,
-						vCodec, aCodec,
-						0, "",
-						nil, nil,
+						&codec.NaiveEncoderFactoryParams{
+							VideoCodec: vCodec,
+							AudioCodec: aCodec,
+						},
 					),
 					nil,
 				),
