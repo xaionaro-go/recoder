@@ -5,7 +5,7 @@ import (
 
 	"github.com/asticode/go-astiav"
 	"github.com/xaionaro-go/avpipeline/kernel"
-	"github.com/xaionaro-go/avpipeline/types"
+	"github.com/xaionaro-go/avpipeline/packetorframe"
 	"github.com/xaionaro-go/recoder"
 )
 
@@ -38,7 +38,7 @@ func newFrameStreamsMerger(cfg recoder.EncodersConfig) (*frameStreamsMerger, err
 
 func (m *frameStreamsMerger) StreamIndexAssign(
 	ctx context.Context,
-	input types.InputPacketOrFrameUnion,
+	input packetorframe.InputUnion,
 ) ([]int, error) {
 	streamIndex := input.GetStreamIndex()
 	switch input.GetMediaType() {

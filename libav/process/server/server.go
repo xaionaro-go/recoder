@@ -19,8 +19,8 @@ import (
 	"github.com/xaionaro-go/avpipeline/node"
 	packetfiltercondition "github.com/xaionaro-go/avpipeline/node/filter/packetfilter/condition"
 	packetcondition "github.com/xaionaro-go/avpipeline/packet/condition"
+	"github.com/xaionaro-go/avpipeline/packetorframe"
 	"github.com/xaionaro-go/avpipeline/processor"
-	"github.com/xaionaro-go/avpipeline/types"
 	"github.com/xaionaro-go/observability"
 	"github.com/xaionaro-go/recoder/libav/grpc/go/recoder_grpc"
 	"github.com/xaionaro-go/recoder/libav/grpc/goconv"
@@ -437,7 +437,7 @@ func (srv *GRPCServer) StartRecoding(
 			inputNode.AddPushPacketsTo(
 				decoderNode,
 				packetfiltercondition.Function(func(ctx context.Context, input packetfiltercondition.Input) bool {
-					outStreamID, err := streamsMerger.StreamIndexAssign(ctx, types.InputPacketOrFrameUnion{
+					outStreamID, err := streamsMerger.StreamIndexAssign(ctx, packetorframe.InputUnion{
 						Packet: &input.Input,
 					})
 					if err != nil {
@@ -457,8 +457,8 @@ func (srv *GRPCServer) StartRecoding(
 					codec.NewNaiveEncoderFactory(
 						pipelineCtx,
 						&codec.NaiveEncoderFactoryParams{
-							VideoCodec: vCodec,
-							AudioCodec: aCodec,
+							VideoCodec: codec.Name(vCodec),
+							AudioCodec: codec.Name(aCodec),
 						},
 					),
 					nil,
@@ -559,11 +559,11 @@ func (srv *GRPCServer) GetStats(
 ) (*recoder_grpc.GetRecoderStatsReply, error) {
 	return xsync.DoR2(ctx, &srv.ContextLocker, func() (*recoder_grpc.GetRecoderStatsReply, error) {
 		context := srv.Context[ContextID(req.GetContextID())]
-		readStats := context.InputNode.GetStatistics().GetStats()
-		writeStats := context.OutputNode.GetStatistics().GetStats()
+		readBytes := context.InputNode.Processor.CountersPtr().Generated.TotalBytes()
+		writeBytes := context.OutputNode.Processor.CountersPtr().Processed.TotalBytes()
 		return &recoder_grpc.GetRecoderStatsReply{
-			BytesCountRead:  readStats.BytesCountWrote,
-			BytesCountWrote: writeStats.BytesCountRead,
+			BytesCountRead:  readBytes,
+			BytesCountWrote: writeBytes,
 		}, nil
 	})
 }

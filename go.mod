@@ -1,8 +1,10 @@
 module github.com/xaionaro-go/recoder
 
-go 1.24.1
+go 1.24.4
 
-replace github.com/asticode/go-astiav v0.36.0 => github.com/xaionaro-go/astiav v0.0.0-20250521203320-7402f3e25a7c
+toolchain go1.24.7
+
+replace github.com/asticode/go-astiav v0.36.0 => github.com/xaionaro-go/astiav v0.0.0-20250921155049-2374b643f99e
 
 require (
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
@@ -13,14 +15,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.10.0
-	github.com/xaionaro-go/avpipeline v0.0.0-20250809004114-8edb93a58cf2
+	github.com/xaionaro-go/avpipeline v0.0.0-20250928145452-4bda099173c8
 	github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42
 	github.com/xaionaro-go/observability v0.0.0-20250622130956-24b7017284e4
 	github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2
 	github.com/xaionaro-go/xcontext v0.0.0-20250111150717-e70e1f5b299c
 	github.com/xaionaro-go/xlogrus v0.0.0-20250111150201-60557109545a
 	github.com/xaionaro-go/xpath v0.0.0-20250111145115-55f5728f643f
-	github.com/xaionaro-go/xsync v0.0.0-20250511184922-deec5fb01a0f
+	github.com/xaionaro-go/xsync v0.0.0-20250928140805-f801683b71ba
 	github.com/yutopp/go-flv v0.3.1
 	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.6
@@ -28,29 +30,43 @@ require (
 )
 
 require (
+	codeberg.org/go-fonts/liberation v0.5.0 // indirect
+	codeberg.org/go-latex/latex v0.1.0 // indirect
+	codeberg.org/go-pdf/fpdf v0.10.0 // indirect
+	git.sr.ht/~sbinet/gg v0.6.0 // indirect
+	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b // indirect
+	github.com/av-elier/go-decimal-to-rational v0.0.0-20250603203441-f39a07f43ff3 // indirect
+	github.com/campoy/embedmd v1.0.0 // indirect
+	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/lmpizarro/go_ehlers_indicators v0.0.0-20220405041400-fd6ced57cf1a // indirect
+	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/sagikazarmark/locafero v0.7.0 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
-	github.com/xaionaro-go/avcommon v0.0.0-20250629220425-ad846e62efb6 // indirect
+	github.com/xaionaro-go/androidetc v0.0.0-20250824193302-b7ecebb3b825 // indirect
+	github.com/xaionaro-go/avcommon v0.0.0-20250823173020-6a2bb1e1f59d // indirect
 	github.com/xaionaro-go/ndk v0.0.0-20250420195304-361bb98583bf // indirect
-	github.com/xaionaro-go/sockopt v0.0.0-20250526214909-e15e1e4bc738 // indirect
+	github.com/xaionaro-go/sockopt v0.0.0-20250823181757-5c02c9cd7b51 // indirect
 	github.com/xaionaro-go/typing v0.0.0-20221123235249-2229101d38ba // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	gocv.io/x/gocv v0.41.0 // indirect
+	golang.org/x/image v0.27.0 // indirect
+	gonum.org/v1/plot v0.16.0 // indirect
 )
 
 require (
 	github.com/DataDog/gostackparse v0.7.0 // indirect
-	github.com/asticode/go-astikit v0.54.0 // indirect
+	github.com/asticode/go-astikit v0.55.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/go-ng/container v0.0.0-20220615121757-4740bf4bbc52 // indirect
 	github.com/go-ng/slices v0.0.0-20230703171042-6195d35636a2 // indirect
 	github.com/go-ng/sort v0.0.0-20220617173827-2cc7cd04f7c7 // indirect
-	github.com/go-ng/xatomic v0.0.0-20230519181013-85c0ec87e55f // indirect
+	github.com/go-ng/xatomic v0.0.0-20250819203610-2369a3becc10 // indirect
 	github.com/go-ng/xsort v0.0.0-20250330112557-d2ee7f01661c // indirect
 	github.com/go-redis/redis/v7 v7.4.1 // indirect
 	github.com/goccy/go-yaml v1.17.1
@@ -81,8 +97,8 @@ require (
 	github.com/xaionaro-go/unsafetools v0.0.0-20241024014258-a46e1ce3763e // indirect
 	github.com/yutopp/go-amf0 v0.1.1 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
-	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
-	golang.org/x/net v0.39.0 // indirect
+	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
+	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.25.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250409194420-de1ac958c67a // indirect
