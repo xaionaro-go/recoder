@@ -435,6 +435,7 @@ func (srv *GRPCServer) StartRecoding(
 				processor.DefaultOptionsRecoder()...,
 			)
 			inputNode.AddPushPacketsTo(
+				ctx,
 				decoderNode,
 				packetfiltercondition.Function(func(ctx context.Context, input packetfiltercondition.Input) bool {
 					outStreamID, err := streamsMerger.StreamIndexAssign(ctx, packetorframe.InputUnion{
@@ -485,14 +486,14 @@ func (srv *GRPCServer) StartRecoding(
 				),
 				processor.DefaultOptionsRecoder()...,
 			)
-			decoderNode.AddPushFramesTo(mergerNode)
-			mergerNode.AddPushFramesTo(encoderNode)
-			encoderNode.AddPushPacketsTo(waiterNode)
-			waiterNode.AddPushPacketsTo(outputNode)
+			decoderNode.AddPushFramesTo(ctx, mergerNode)
+			mergerNode.AddPushFramesTo(ctx, encoderNode)
+			encoderNode.AddPushPacketsTo(ctx, waiterNode)
+			waiterNode.AddPushPacketsTo(ctx, outputNode)
 		}
 	}
 	if !hasRecoder {
-		inputNode.AddPushPacketsTo(outputNode)
+		inputNode.AddPushPacketsTo(ctx, outputNode)
 	}
 
 	observability.Go(ctx, func(ctx context.Context) {
@@ -518,7 +519,7 @@ func (srv *GRPCServer) StartRecoding(
 		})
 		logger.Debugf(ctx, "pipeline.Serve: %s", inputNode.String())
 		var pushTos []node.Abstract
-		for _, pushTo := range inputNode.GetPushPacketsTos() {
+		for _, pushTo := range inputNode.GetPushPacketsTos(ctx) {
 			pushTos = append(pushTos, pushTo.Node)
 		}
 		if err := avpipeline.NotifyAboutPacketSources(ctx, input, pushTos...); err != nil {
