@@ -1,10 +1,8 @@
 module github.com/xaionaro-go/recoder
 
-go 1.24.4
+go 1.25.5
 
-toolchain go1.24.7
-
-replace github.com/asticode/go-astiav v0.36.0 => github.com/xaionaro-go/astiav v0.0.0-20251114192847-048826e6dc3a
+replace github.com/asticode/go-astiav v0.36.0 => github.com/xaionaro-go/astiav v0.0.0-20251221215811-398e1d68b2e9
 
 require (
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
@@ -15,14 +13,14 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/pflag v1.0.6
 	github.com/stretchr/testify v1.11.0
-	github.com/xaionaro-go/avpipeline v0.0.0-20251127190533-54f212ffa588
+	github.com/xaionaro-go/avpipeline v0.0.0-20260105202319-a696ac2167b6
 	github.com/xaionaro-go/go-rtmp v0.0.0-20241009130244-1e3160f27f42
 	github.com/xaionaro-go/observability v0.0.0-20250622130956-24b7017284e4
 	github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2
 	github.com/xaionaro-go/xcontext v0.0.0-20250111150717-e70e1f5b299c
 	github.com/xaionaro-go/xlogrus v0.0.0-20250111150201-60557109545a
 	github.com/xaionaro-go/xpath v0.0.0-20250111145115-55f5728f643f
-	github.com/xaionaro-go/xsync v0.0.0-20250928140805-f801683b71ba
+	github.com/xaionaro-go/xsync v0.0.0-20260103200624-2cd14b984747
 	github.com/yutopp/go-flv v0.3.1
 	google.golang.org/grpc v1.72.1
 	google.golang.org/protobuf v1.36.6
@@ -53,7 +51,7 @@ require (
 	github.com/xaionaro-go/avcommon v0.0.0-20250823173020-6a2bb1e1f59d // indirect
 	github.com/xaionaro-go/ndk v0.0.0-20250420195304-361bb98583bf // indirect
 	github.com/xaionaro-go/rpn v0.0.0-20250818130635-1419b5218722 // indirect
-	github.com/xaionaro-go/sockopt v0.0.0-20250823181757-5c02c9cd7b51 // indirect
+	github.com/xaionaro-go/tcp v0.0.0-20260103194940-f10157ebd88d // indirect
 	github.com/xaionaro-go/typing v0.0.0-20221123235249-2229101d38ba // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	gocv.io/x/gocv v0.41.0 // indirect
@@ -100,11 +98,11 @@ require (
 	github.com/xaionaro-go/spinlock v0.0.0-20200518175509-30e6d1ce68a1 // indirect
 	github.com/xaionaro-go/unsafetools v0.0.0-20241024014258-a46e1ce3763e // indirect
 	github.com/yutopp/go-amf0 v0.1.1 // indirect
-	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20250813145105-42675adae3e6 // indirect
-	golang.org/x/net v0.47.0 // indirect
-	golang.org/x/sys v0.38.0 // indirect
-	golang.org/x/text v0.31.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/text v0.32.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250409194420-de1ac958c67a // indirect
 	lukechampine.com/blake3 v1.4.0 // indirect
 )
