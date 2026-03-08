@@ -2,7 +2,6 @@ module github.com/xaionaro-go/recoder
 
 go 1.25.5
 
-
 require (
 	github.com/AgustinSRG/go-child-process-manager v1.0.1
 	github.com/asticode/go-astiav v0.36.0
@@ -35,7 +34,7 @@ require (
 	github.com/av-elier/go-decimal-to-rational v0.0.0-20250603203441-f39a07f43ff3 // indirect
 	github.com/campoy/embedmd v1.0.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/lmpizarro/go_ehlers_indicators v0.0.0-20220405041400-fd6ced57cf1a // indirect
