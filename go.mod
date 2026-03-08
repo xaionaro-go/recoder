@@ -2,7 +2,6 @@ module github.com/xaionaro-go/recoder
 
 go 1.25.5
 
-replace github.com/asticode/go-astiav v0.36.0 => github.com/xaionaro-go/astiav v0.0.0-20251221215811-398e1d68b2e9
 
 require (
 	github.com/AgustinSRG/go-child-process-manager v1.0.1

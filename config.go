@@ -274,7 +274,7 @@ func (aq audioQualitySerializable) Convert() (AudioQuality, error) {
 type AudioCodec uint
 
 const (
-	AudioCodecUndefined = AudioCodec(iota)
+	UndefinedAudioCodec = AudioCodec(iota)
 	AudioCodecCopy
 	AudioCodecAAC
 	AudioCodecVorbis
@@ -288,7 +288,7 @@ func (ac *AudioCodec) String() string {
 	}
 
 	switch *ac {
-	case AudioCodecUndefined:
+	case UndefinedAudioCodec:
 		return "<undefined>"
 	case AudioCodecCopy:
 		return "<copy>"
@@ -311,7 +311,7 @@ func (ac *AudioCodec) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("AudioCodec is nil")
 	}
 	s := strings.ToLower(strings.Trim(string(b), `"`))
-	for cmp := AudioCodecUndefined; cmp < EndOfAudioCodec; cmp++ {
+	for cmp := UndefinedAudioCodec; cmp < EndOfAudioCodec; cmp++ {
 		if cmp.String() == s {
 			*ac = cmp
 			return nil
@@ -449,7 +449,7 @@ func ptr[T any](in T) *T {
 type VideoCodec uint
 
 const (
-	VideoCodecUndefined = VideoCodec(iota)
+	UndefinedVideoCodec = VideoCodec(iota)
 	VideoCodecCopy
 	VideoCodecH264
 	VideoCodecHEVC
@@ -463,7 +463,7 @@ func (vc *VideoCodec) String() string {
 	}
 
 	switch *vc {
-	case VideoCodecUndefined:
+	case UndefinedVideoCodec:
 		return "<undefined>"
 	case VideoCodecCopy:
 		return "<copy>"
@@ -486,7 +486,7 @@ func (vc *VideoCodec) UnmarshalJSON(b []byte) error {
 		return fmt.Errorf("VideoCodec is nil")
 	}
 	s := strings.ToLower(strings.Trim(string(b), `"`))
-	for cmp := VideoCodecUndefined; cmp < EndOfVideoCodec; cmp++ {
+	for cmp := UndefinedVideoCodec; cmp < EndOfVideoCodec; cmp++ {
 		if cmp.String() == s {
 			*vc = cmp
 			return nil
