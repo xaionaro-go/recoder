@@ -408,11 +408,19 @@ func (srv *GRPCServer) StartRecoding(
 				return nil, fmt.Errorf("we currently support recoding to a single video track at most only, but requested %d video tracks", len(encoderCfg.OutputVideoTracks))
 			}
 			var vCodec string
+			var videoQuality codec.Quality
 			if len(encoderCfg.OutputVideoTracks) == 1 {
 				videoTrack := encoderCfg.OutputVideoTracks[0]
 				vCodec = optimalVideoCodec(videoTrack.Config.Codec)
+				q, err := videoQualityToCodecQuality(videoTrack.Config.Quality)
+				if err != nil {
+					cancelFn()
+					return nil, fmt.Errorf("unable to convert video quality: %w", err)
+				}
+				videoQuality = q
 			}
 			var aCodec string
+			var audioQuality codec.Quality
 			if len(encoderCfg.OutputAudioTracks) > 1 {
 				cancelFn()
 				return nil, fmt.Errorf("we currently support recoding to a single audio track at most only, but requested %d audio tracks", len(encoderCfg.OutputAudioTracks))
@@ -420,6 +428,12 @@ func (srv *GRPCServer) StartRecoding(
 			if len(encoderCfg.OutputAudioTracks) == 1 {
 				audioTrack := encoderCfg.OutputAudioTracks[0]
 				aCodec = audioTrack.Config.Codec.String()
+				q, err := audioQualityToCodecQuality(audioTrack.Config.Quality)
+				if err != nil {
+					cancelFn()
+					return nil, fmt.Errorf("unable to convert audio quality: %w", err)
+				}
+				audioQuality = q
 			}
 			hasRecoder = true
 			decoderNode := node.NewFromKernel(
@@ -455,8 +469,11 @@ func (srv *GRPCServer) StartRecoding(
 					codec.NewNaiveEncoderFactory(
 						pipelineCtx,
 						&codec.NaiveEncoderFactoryParams{
-							VideoCodec: codec.Name(vCodec),
-							AudioCodec: codec.Name(aCodec),
+							VideoCodec:   codec.Name(vCodec),
+							AudioCodec:   codec.Name(aCodec),
+							VideoOptions: videoOpts,
+							VideoQuality: videoQuality,
+							AudioQuality: audioQuality,
 						},
 					),
 					nil,
