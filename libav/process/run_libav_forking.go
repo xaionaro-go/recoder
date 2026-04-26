@@ -22,7 +22,7 @@ import (
 func run(
 	ctx context.Context,
 ) (*Recoder, error) {
-	execPath, err := xpath.GetExecPath(os.Args[0])
+	execPath, err := xpath.GetSelfExecPath()
 	if err != nil {
 		return nil, fmt.Errorf("unable to get self-path: %w", err)
 	}
