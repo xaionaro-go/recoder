@@ -17,7 +17,7 @@ require (
 	github.com/xaionaro-go/secret v0.0.0-20250111141743-ced12e1082c2
 	github.com/xaionaro-go/xcontext v0.0.0-20250111150717-e70e1f5b299c
 	github.com/xaionaro-go/xlogrus v0.0.0-20250111150201-60557109545a
-	github.com/xaionaro-go/xpath v0.0.0-20250111145115-55f5728f643f
+	github.com/xaionaro-go/xpath v0.0.0-20260426170210-a0fce9eae3ad
 	github.com/xaionaro-go/xsync v0.0.0-20260103200624-2cd14b984747
 	github.com/yutopp/go-flv v0.3.1
 	google.golang.org/grpc v1.72.1
